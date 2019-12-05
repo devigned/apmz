@@ -11,7 +11,7 @@ func TestNewRootCmd(t *testing.T) {
 	root, err := newRootCommand()
 	require.NoError(t, err)
 
-	expected := []string{"offers", "operations", "publishers", "skus", "versions", "version"}
+	expected := []string{"trace", "version"}
 	actual := make([]string, len(root.Commands()))
 	for i, c := range root.Commands() {
 		actual[i] = c.Name()
