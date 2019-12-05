@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/devigned/apmz-sdk/apmz"
-	"github.com/devigned/apmz-sdk/apmz/contracts"
 
 	"github.com/devigned/apmz/pkg/format"
 )
@@ -27,7 +26,7 @@ type (
 
 	// APMer provides the behaviors needed to send events to Azure Application Insights
 	APMer interface {
-		TrackTrace(name string, severity contracts.SeverityLevel)
+		Track(telemetry apmz.Telemetry)
 		Channel() apmz.TelemetryChannel
 	}
 )

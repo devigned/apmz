@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/devigned/apmz-sdk/apmz"
 	"github.com/devigned/apmz-sdk/apmz/contracts"
 	"github.com/spf13/cobra"
 
@@ -16,6 +17,7 @@ type (
 	traceArgs struct {
 		Name  string
 		Level int
+		Tags  map[string]string
 	}
 )
 
@@ -32,7 +34,12 @@ func NewTraceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				return err
 			}
 
-			apmer.TrackTrace(oArgs.Name, contracts.SeverityLevel(oArgs.Level))
+			trace := apmz.NewTraceTelemetry(oArgs.Name, contracts.SeverityLevel(oArgs.Level))
+			for k, v := range oArgs.Tags {
+				trace.Properties[k] = v
+			}
+
+			apmer.Track(trace)
 
 			select {
 			case <-apmer.Channel().Close(2 * time.Second):
@@ -47,6 +54,7 @@ func NewTraceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	f := cmd.Flags()
 	f.IntVarP(&oArgs.Level, "level", "l", 0, "severity level for the event")
 	f.StringVarP(&oArgs.Name, "name", "n", "", "trace event name")
+	f.StringToStringVarP(&oArgs.Tags, "tags", "t", map[string]string{}, "custom tags to be applied to the trace formatted as key=value")
 	err := cmd.MarkFlagRequired("name")
 	return cmd, err
 }
