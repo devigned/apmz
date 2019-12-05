@@ -21,7 +21,7 @@ all: fmt lint vet tidy build
 install-tools: ; $(info $(M) installing tools…)
 	$(Q) make -C ./tools
 
-build: lint tidy ; $(info $(M) buiding ./bin/pub)
+build: lint tidy ; $(info $(M) buiding ./bin/$(APP))
 	$Q $(GO)  build -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -o ./bin/$(APP)
 
 .PHONY: lint
@@ -53,7 +53,6 @@ test: ; $(info $(M) running go test…)
 .PHONY: test-cover
 test-cover: install-tools ; $(info $(M) running go test…)
 	$(Q) $(GO) test -tags=noexit -race -covermode atomic -coverprofile=profile.cov ./...
-	$(Q) goveralls -coverprofile=profile.cov -service=github
 
 .PHONY: gox
 gox: install-tools

@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0
+	github.com/devigned/apmz-sdk v0.0.2
 	github.com/devigned/tab v0.0.1
 	github.com/devigned/tab/opencensus v0.1.2
 	github.com/joho/godotenv v1.3.0
