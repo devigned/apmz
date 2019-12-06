@@ -1,10 +1,9 @@
-package trace
+package metric
 
 import (
 	"context"
 
 	"github.com/devigned/apmz-sdk/apmz"
-	"github.com/devigned/apmz-sdk/apmz/contracts"
 	"github.com/spf13/cobra"
 
 	"github.com/devigned/apmz/pkg/service"
@@ -12,19 +11,19 @@ import (
 )
 
 type (
-	traceArgs struct {
+	metricArgs struct {
 		Name  string
-		Level int
+		Value float64
 		Tags  map[string]string
 	}
 )
 
-// NewTraceCommand creates a new `apmz trace` command
-func NewTraceCommand(sl service.CommandServicer) (*cobra.Command, error) {
-	var oArgs traceArgs
+// NewMetricCommand creates a new `apmz batch` command
+func NewMetricCommand(sl service.CommandServicer) (*cobra.Command, error) {
+	var oArgs metricArgs
 	cmd := &cobra.Command{
-		Use:   "trace",
-		Short: "send a trace event (traces) to Application Insights",
+		Use:   "metric",
+		Short: "send a metric (customMetrics) to Application Insights",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			apmer, err := sl.GetAPMer()
 			if err != nil {
@@ -32,18 +31,18 @@ func NewTraceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				return err
 			}
 
-			trace := apmz.NewTraceTelemetry(oArgs.Name, contracts.SeverityLevel(oArgs.Level))
+			metric := apmz.NewMetricTelemetry(oArgs.Name, oArgs.Value)
 			for k, v := range oArgs.Tags {
-				trace.Properties[k] = v
+				metric.Properties[k] = v
 			}
 
-			apmer.Track(trace)
+			apmer.Track(metric)
 			return nil
 		}),
 	}
 
 	f := cmd.Flags()
-	f.IntVarP(&oArgs.Level, "level", "l", 0, "severity level for the event")
+	f.Float64VarP(&oArgs.Value, "value", "v", 0, "value of the metric as a float64")
 	f.StringVarP(&oArgs.Name, "name", "n", "", "trace event name")
 	f.StringToStringVarP(&oArgs.Tags, "tags", "t", map[string]string{}, "custom tags to be applied to the trace formatted as key=value")
 	err := cmd.MarkFlagRequired("name")

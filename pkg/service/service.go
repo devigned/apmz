@@ -1,6 +1,8 @@
 package service
 
 import (
+	"sync"
+
 	"github.com/devigned/apmz-sdk/apmz"
 
 	"github.com/devigned/apmz/pkg/format"
@@ -9,6 +11,7 @@ import (
 type (
 	// Registry holds the factories and services needed for command execution
 	Registry struct {
+		doOnce         sync.Once
 		APMerFactory   func() (APMer, error)
 		PrinterFactory func() format.Printer
 	}
