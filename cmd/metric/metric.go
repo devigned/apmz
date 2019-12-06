@@ -43,8 +43,8 @@ func NewMetricCommand(sl service.CommandServicer) (*cobra.Command, error) {
 
 	f := cmd.Flags()
 	f.Float64VarP(&oArgs.Value, "value", "v", 0, "value of the metric as a float64")
-	f.StringVarP(&oArgs.Name, "name", "n", "", "trace event name")
-	f.StringToStringVarP(&oArgs.Tags, "tags", "t", map[string]string{}, "custom tags to be applied to the trace formatted as key=value")
+	f.StringVarP(&oArgs.Name, "name", "n", "", "metric name")
+	f.StringToStringVarP(&oArgs.Tags, "tags", "t", map[string]string{}, "custom tags to be applied to the metric formatted as key=value")
 	err := cmd.MarkFlagRequired("name")
 	return cmd, err
 }
