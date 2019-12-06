@@ -53,10 +53,15 @@ func newRootCommand() (*cobra.Command, error) {
 	var apmer service.APMer
 	registry := &service.Registry{
 		APMerFactory: func() (service.APMer, error) {
+			var err error
 			once.Do(func() {
+				if apiKey == "" {
+					err = errors.New("must provide api-key")
+					return
+				}
 				apmer = apmz.NewTelemetryClient(apiKey)
 			})
-			return apmer, nil
+			return apmer, err
 		},
 		PrinterFactory: func() format.Printer {
 			return &format.StdPrinter{
