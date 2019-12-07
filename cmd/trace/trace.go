@@ -2,8 +2,6 @@ package trace
 
 import (
 	"context"
-	"errors"
-	"time"
 
 	"github.com/devigned/apmz-sdk/apmz"
 	"github.com/devigned/apmz-sdk/apmz/contracts"
@@ -18,6 +16,7 @@ type (
 		Name  string
 		Level int
 		Tags  map[string]string
+		Out   bool
 	}
 )
 
@@ -26,27 +25,20 @@ func NewTraceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs traceArgs
 	cmd := &cobra.Command{
 		Use:   "trace",
-		Short: "list all offers",
+		Short: "send a trace event (traces) to Application Insights",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
+			trace := apmz.NewTraceTelemetry(oArgs.Name, contracts.SeverityLevel(oArgs.Level))
+			for k, v := range oArgs.Tags {
+				trace.Properties[k] = v
+			}
+
 			apmer, err := sl.GetAPMer()
 			if err != nil {
 				sl.GetPrinter().ErrPrintf("unable to create App Insight client: %v", err)
 				return err
 			}
 
-			trace := apmz.NewTraceTelemetry(oArgs.Name, contracts.SeverityLevel(oArgs.Level))
-			for k, v := range oArgs.Tags {
-				trace.Properties[k] = v
-			}
-
 			apmer.Track(trace)
-
-			select {
-			case <-apmer.Channel().Close(2 * time.Second):
-				return errors.New("failed to flush events to Application Insights")
-			case <-time.After(3 * time.Second):
-			}
-
 			return nil
 		}),
 	}

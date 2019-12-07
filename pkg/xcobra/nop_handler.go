@@ -2,6 +2,7 @@
 
 package xcobra
 
-func exitWithCode(err error) {
-	// nop
+// ExitWithCode is a noop
+func ExitWithCode(err error) {
+	// noop
 }
