@@ -14,8 +14,8 @@ github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwc
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/devigned/apmz-sdk v0.0.2 h1:LnePGTzOoPWXYnbxe06rDyjYpovddOUS0qApEQHv/Io=
-github.com/devigned/apmz-sdk v0.0.2/go.mod h1:eE+ojd3LrDl8v9eQ8CXMDGzLW1pB0i0NxQIf6wsh/FE=
+github.com/devigned/apmz-sdk v0.0.4 h1:cc6fR/AdIiNivFhcksQSHZFIxn9+qxsb7k2aYsIfIdI=
+github.com/devigned/apmz-sdk v0.0.4/go.mod h1:eE+ojd3LrDl8v9eQ8CXMDGzLW1pB0i0NxQIf6wsh/FE=
 github.com/devigned/tab v0.0.1 h1:RFMMQ40ds0zAPabPGbNT7C269NbQQyStQUsKqxwm654=
 github.com/devigned/tab v0.0.1/go.mod h1:oVYrfgGyond090gxCvvbjZji79+peOiSV6vhZhKJM0Y=
 github.com/devigned/tab/opencensus v0.1.2 h1:IkqF46qN8f1WCGwNlvMSVOPxAdFug29n9zLIlxGL7ms=

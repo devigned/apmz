@@ -1,7 +1,15 @@
 package batch
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -22,13 +30,47 @@ func NewBatchCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		Use:   "batch",
 		Short: "upload a batch of telemetry to Application Insights",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
-			_, err := sl.GetAPMer()
+			apmzer, err := sl.GetAPMer()
 			if err != nil {
 				sl.GetPrinter().ErrPrintf("unable to create App Insight client: %v", err)
 				return err
 			}
 
-			return nil
+			reader := io.Reader(os.Stdin)
+			if oArgs.FilePath != "" {
+				bits, err := ioutil.ReadFile(oArgs.FilePath)
+				if err != nil {
+					sl.GetPrinter().ErrPrintf("unable to read file: %v", err)
+					return err
+				}
+				reader = bytes.NewReader(bits)
+			}
+
+			eventsBits, err := ioutil.ReadAll(reader)
+			if err != nil {
+				sl.GetPrinter().ErrPrintf("unable to read: %v", err)
+				return err
+			}
+
+			lines := strings.Split(string(eventsBits), "\n")
+			sent := 0
+			for _, l := range lines {
+				var evt service.Event
+
+				if strings.TrimSpace(l) == "" {
+					continue
+				}
+
+				if err := json.Unmarshal([]byte(l), &evt); err != nil {
+					sl.GetPrinter().ErrPrintf("unable to unmarshal events: %v -- \n%v", err, l)
+					return err
+				}
+
+				apmzer.Track(evt.Item)
+				sent++
+			}
+
+			return sl.GetPrinter().Print(struct{ Result string }{Result: fmt.Sprintf("sent %d events", sent)})
 		}),
 	}
 

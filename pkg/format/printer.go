@@ -57,6 +57,6 @@ func printJSON(writer io.Writer, obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprint(writer, string(bits))
+	_, err = fmt.Fprint(writer, string(bits)+"\n")
 	return err
 }
