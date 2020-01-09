@@ -35,7 +35,7 @@ stages:
             env:
               PATTERN: "*.tar.gz"
               STORAGE_CONTAINER: $(storage.container)
-              DESTINATION_PATH: apmz/$(RELEASE_VERSION)/binaries
+              DESTINATION_PATH: $(RELEASE_VERSION)/binaries
               SOURCE: $(Build.ArtifactStagingDirectory)/release/bins
               AZURE_STORAGE_CONNECTION_STRING: $(storage.connection_string)
 
@@ -61,6 +61,6 @@ stages:
                   env:
                     PATTERN: "*.tar.gz"
                     STORAGE_CONTAINER: $(storage.container)
-                    DESTINATION_PATH: apmz/$(RELEASE_VERSION)/binaries
+                    DESTINATION_PATH: $(RELEASE_VERSION)/binaries
                     SOURCE: $(Pipeline.Workspace)/apmz-release/bins
                     AZURE_STORAGE_CONNECTION_STRING: $(storage.prod.connection_string)
