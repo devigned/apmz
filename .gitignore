@@ -16,3 +16,5 @@ bin
 .idea
 
 .env
+
+test.sh

@@ -1,0 +1,69 @@
+trigger:
+  tags:
+    include:
+      - "v*"
+  branches:
+    include:
+      - master
+
+pr: none
+
+stages:
+  - stage: build
+    jobs:
+      - job: build
+        pool: Upstream Pool
+        workspace:
+          clean: all
+        steps:
+          - bash: |
+              RELEASE_VERSION=`git describe --tags` && echo "##vso[task.setvariable variable=RELEASE_VERSION]$RELEASE_VERSION"
+            displayName: Set the tag name as an environment variable
+          - bash: |
+              make gox
+              mkdir -p $(Build.ArtifactStagingDirectory)/release/bins
+              mkdir -p $(Build.ArtifactStagingDirectory)/release/scripts
+              cp -r ./bin/$(RELEASE_VERSION)/*.tar.gz $(Build.ArtifactStagingDirectory)/release/bins
+              cp ./scripts/upload_dir.sh $(Build.ArtifactStagingDirectory)/release/scripts/upload_dir.sh
+              echo $RELEASE_VERSION > $(Build.ArtifactStagingDirectory)/release/scripts/release_version.txt
+            env:
+              SHORT_VERSION: $(RELEASE_VERSION)
+              VERSION: $(RELEASE_VERSION)
+            displayName: Build multi-arch bins
+          - publish: $(Build.ArtifactStagingDirectory)/release
+            artifact: apmz-release
+            displayName: Publish artifacts
+          - bash: 'scripts/upload_dir.sh'
+            displayName: Uploading release-tars to blob storage container - $(storage.container)
+            env:
+              PATTERN: "*.tar.gz"
+              STORAGE_CONTAINER: $(storage.container)
+              DESTINATION_PATH: apmz/$(RELEASE_VERSION)/binaries
+              SOURCE: $(Build.ArtifactStagingDirectory)/release/bins
+              AZURE_STORAGE_CONNECTION_STRING: $(storage.connection_string)
+
+  - stage: deploy
+    jobs:
+      - deployment: apmz
+        displayName: Publish apmz
+        pool: Upstream Prod Pool
+        environment: Production
+        workspace:
+          clean: all
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - bash: |
+                    chmod +x $(Pipeline.Workspace)/apmz-release/scripts/upload_dir.sh
+                    RELEASE_VERSION=`cat $(Pipeline.Workspace)/apmz-release/scripts/release_version.txt` && \
+                      echo "##vso[task.setvariable variable=RELEASE_VERSION]$RELEASE_VERSION"
+                  displayName: Setup deploy
+                - bash: $(Pipeline.Workspace)/apmz-release/scripts/upload_dir.sh
+                  displayName: Uploading release-tars to production blob storage container - $(storage.container)
+                  env:
+                    PATTERN: "*.tar.gz"
+                    STORAGE_CONTAINER: $(storage.container)
+                    DESTINATION_PATH: apmz/$(RELEASE_VERSION)/binaries
+                    SOURCE: $(Pipeline.Workspace)/apmz-release/bins
+                    AZURE_STORAGE_CONNECTION_STRING: $(storage.prod.connection_string)
