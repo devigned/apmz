@@ -17,12 +17,14 @@ type (
 		doOnce         sync.Once
 		APMerFactory   func() (APMer, error)
 		PrinterFactory func() format.Printer
+		APIKeyFactory  func() string
 	}
 
 	// CommandServicer provides all functionality needed for command execution
 	CommandServicer interface {
 		GetAPMer() (APMer, error)
 		GetPrinter() format.Printer
+		GetKey() string
 	}
 
 	//// Closer provides the ability to close the client
@@ -67,6 +69,11 @@ func (r *Registry) GetAPMer() (APMer, error) {
 // GetPrinter will return a printer for printing command output
 func (r *Registry) GetPrinter() format.Printer {
 	return r.PrinterFactory()
+}
+
+// GetKey will return the api-key for application insights
+func (r *Registry) GetKey() string {
+	return r.APIKeyFactory()
 }
 
 // Track will either send to the client or print depending if the proxy printer is set

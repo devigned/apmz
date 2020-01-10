@@ -49,7 +49,7 @@ func RunWithCtx(run func(ctx context.Context, cmd *cobra.Command, args []string)
 		var err error
 		cmd.PersistentPostRunE = func(c *cobra.Command, args []string) error {
 			// Children override the parent, so let's provide the parent a chance to speak up
-			if cmd.Parent() != nil {
+			if cmd.Parent() != nil && cmd.Parent().PersistentPostRunE != nil {
 				pErr := cmd.Parent().PersistentPostRunE(c, args)
 				if pErr != nil {
 					ExitWithCode(pErr)
