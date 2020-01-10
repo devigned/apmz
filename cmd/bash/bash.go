@@ -80,7 +80,7 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 		}),
 	}
 
-	cmd.Flags().BoolVarP(&oArgs.Disable, "disable", "d", false, "disable event collection; if disabled, then all script functions are defined, but do not collect events.")
+	cmd.Flags().BoolVarP(&oArgs.Disable, "disabled", "d", false, "disable event collection; if disabled, then all script functions are defined, but do not collect events.")
 	cmd.Flags().StringVarP(&oArgs.ScriptName, "name", "n", "script", "name of script for use in script start and exit events")
 	cmd.Flags().StringToStringVarP(&oArgs.DefaultTags, "default-tags", "t", map[string]string{}, "default tags for all events and metrics formatted as key=value")
 	return cmd, nil

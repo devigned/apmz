@@ -115,7 +115,6 @@ exitAndFlush() {
   fi
 
   if [[ -z "${__PRESERVE_TMP_FILE}" ]]; then
-    echo deleted
     rm "${__TMP_APMZ_BATCH_FILE}"
   fi
 }

@@ -215,7 +215,6 @@ exitAndFlush() {
   fi
 
   if [[ -z "${__PRESERVE_TMP_FILE}" ]]; then
-    echo deleted
     rm "${__TMP_APMZ_BATCH_FILE}"
   fi
 }
@@ -233,7 +232,7 @@ func dataEnabled_bashSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/enabled_bash.sh", size: 3796, mode: os.FileMode(420), modTime: time.Unix(1578617331, 0)}
+	info := bindataFileInfo{name: "data/enabled_bash.sh", size: 3779, mode: os.FileMode(420), modTime: time.Unix(1578699667, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
