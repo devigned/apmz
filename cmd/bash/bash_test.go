@@ -35,7 +35,7 @@ func TestNewBashCommand(t *testing.T) {
 				s := serviceWithKey()
 				p := new(mocks.PrinterMock)
 				p.On("Printf", mock.MatchedBy(func(script string) bool {
-					return strings.Contains(script, "__TMP_APMZ_BATCH_FILE=\"$(mktemp /tmp/apmz.XXXXXX)")
+					return strings.Contains(script, `__TMP_APMZ_BATCH_FILE="${__TMP_APMZ_BATCH_FILE:-$(mktemp /tmp/apmz.XXXXXX)}"`)
 				}), mock.Anything)
 				s.On("GetPrinter").Return(p)
 				return s

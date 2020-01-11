@@ -28,12 +28,12 @@ func NewBashCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		Use:   "bash",
 		Short: "prints a bash script to source which provides functionality for common tracing and metrics operations",
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
-			script, err := data.Asset("data/enabled_bash.sh")
+			script, err := data.Asset("data/enabled_bash.gosh")
 			if err != nil {
 				return err
 			}
 			if oArgs.Disable {
-				script, err = data.Asset("data/disabled_bash.sh")
+				script, err = data.Asset("data/disabled_bash.gosh")
 				if err != nil {
 					return err
 				}

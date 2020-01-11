@@ -27,7 +27,7 @@ build: lint tidy ; $(info $(M) buiding ./bin/$(APP))
 	$Q $(GO) build -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -o ./bin/$(APP)
 
 .PHONY: generate
-generate:
+generate: ; $(info $(M) running generate…)
 	$Q $(BINDATA) -o ./pkg/data/bindata.go -pkg data -nocompress ./data/...
 
 .PHONY: lint
@@ -36,7 +36,7 @@ lint: install-tools ; $(info $(M) running golint…) @ ## Run golint
 
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
-	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./... | grep -v /pkg/data); do \
+	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./... | grep -v /pkg/data | grep -v /internal/test/bash); do \
 		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
 	 done ; exit $$ret
 
@@ -52,8 +52,12 @@ tidy: ; $(info $(M) running tidy…) @ ## Run tidy
 build-debug: ; $(info $(M) buiding debug...)
 	$Q $(GO)  build -o ./bin/$(APP) -tags debug
 
+.PHONY: test-generate ; $(info $(M) running test-generate…)
+test-generate: ; $(info $(M) generating test data…)
+	$Q $(BINDATA) -o ./internal/test/bash/bindata.go -pkg bash_test -nocompress ./cmd/bash/testdata/...
+
 .PHONY: test
-test: ; $(info $(M) running go test…)
+test: build test-generate ; $(info $(M) running go test…)
 	$(Q) $(GO) test ./... -tags=noexit
 
 .PHONY: test-cover

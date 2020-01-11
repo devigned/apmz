@@ -1,7 +1,7 @@
 // Code generated for package data by go-bindata DO NOT EDIT. (@generated)
 // sources:
-// data/disabled_bash.sh
-// data/enabled_bash.sh
+// data/disabled_bash.gosh
+// data/enabled_bash.gosh
 package data
 
 import (
@@ -54,7 +54,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-var _dataDisabled_bashSh = []byte(`#!/usr/bin/env bash
+var _dataDisabled_bashGosh = []byte(`#!/usr/bin/env bash
 
 trace_err() {
     return
@@ -83,24 +83,24 @@ default_apmz_tags() {
   return
 }`)
 
-func dataDisabled_bashShBytes() ([]byte, error) {
-	return _dataDisabled_bashSh, nil
+func dataDisabled_bashGoshBytes() ([]byte, error) {
+	return _dataDisabled_bashGosh, nil
 }
 
-func dataDisabled_bashSh() (*asset, error) {
-	bytes, err := dataDisabled_bashShBytes()
+func dataDisabled_bashGosh() (*asset, error) {
+	bytes, err := dataDisabled_bashGoshBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/disabled_bash.sh", size: 236, mode: os.FileMode(420), modTime: time.Unix(1578612908, 0)}
+	info := bindataFileInfo{name: "data/disabled_bash.gosh", size: 236, mode: os.FileMode(420), modTime: time.Unix(1578612908, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
 
-var _dataEnabled_bashSh = []byte(`#!/usr/bin/env bash
+var _dataEnabled_bashGosh = []byte(`#!/usr/bin/env bash
 
-__TMP_APMZ_BATCH_FILE="$(mktemp /tmp/apmz.XXXXXX)"
+__TMP_APMZ_BATCH_FILE="${__TMP_APMZ_BATCH_FILE:-$(mktemp /tmp/apmz.XXXXXX)}"
 __SCRIPT_START_TIME=$(apmz time unixnano)
 __SCRIPT_NAME="${__SCRIPT_NAME:-{{.ScriptName}}}"
 __APP_INSIGHTS_KEY="${__APP_INSIGHTS_KEY:-{{.AppInsightsKey}}}"
@@ -110,8 +110,7 @@ __DEFAULT_TAGS="${__DEFAULT_TAGS:-{{.DefaultTags}}}"
 #
 # should be invoked in the following way: `+"`"+`trace_err "trace_name" "tag1,tag2,tag3"`+"`"+`
 trace_err() {
-  name=$1
-  tags=$2
+  local name=$1 tags=$2
   tags=$(append_default_tags "${tags}")
   if [[ -z "${tags}" ]]; then
     apmz trace -n "${name}" -l 3 -o >>"${__TMP_APMZ_BATCH_FILE}"
@@ -124,8 +123,7 @@ trace_err() {
 #
 # should be invoked in the following way: `+"`"+`trace_info "trace_name" "tag1,tag2,tag3"`+"`"+`
 trace_info() {
-  name=$1
-  tags=$2
+  local name=$1 tags=$2
   tags=$(append_default_tags "${tags}")
   if [[ -z "${tags}" ]]; then
     apmz trace -n "${name}" -l 0 -o >>"${__TMP_APMZ_BATCH_FILE}"
@@ -138,6 +136,7 @@ trace_info() {
 #
 # should be invoked in the following way: `+"`"+`time_metric "metric_name" fuction_to_time(...)`+"`"+`
 time_metric() {
+  local name start end diff tags
   name=$1
   shift
   start=$(apmz time unixnano)
@@ -156,6 +155,7 @@ time_metric() {
 #
 # should be invoked in the following way: `+"`"+`time_metric "metric_name" "tag1=value,tag2=value" fuction_to_time(...)`+"`"+`
 time_metric_with_tags() {
+  local name tags start end diff
   name=$1
   shift
   tags=$1
@@ -176,24 +176,18 @@ time_metric_with_tags() {
 #
 # should be invoked in the following way: `+"`"+`append_default_tags "${tags}"`+"`"+`
 append_default_tags() {
-  input_tags=$1
-  if [[ -z "${input_tags}" && -z "$(default_apmz_tags)" ]]; then
-    echo ""
-  elif [[ -z "${input_tags}" ]]; then
-    default_apmz_tags
+  local tags=$1
+  if [[ -z "${__DEFAULT_TAGS}" ]]; then
+    echo "${tags}"
+  elif [[ -z "${tags}" ]]; then
+    echo "${__DEFAULT_TAGS}"
   else
-    echo "${input_tags},${__DEFAULT_TAGS}"
+    echo "${tags}"
   fi
 }
 
-# default_apmz_tags will return the __DEFAULT_TAGS and is called from append_default_tags
-#
-# feel free to override this function with your own
-default_apmz_tags() {
-  echo "${__DEFAULT_TAGS}"
-}
-
 exitAndFlush() {
+  local tags script_end duration
   tags=$(append_default_tags "code=$?")
   if [[ "$?" == "0" ]]; then
     trace_info "$__SCRIPT_NAME-exit" "${tags}"
@@ -203,11 +197,10 @@ exitAndFlush() {
 
   script_end=$(apmz time unixnano)
   duration=$(apmz time diff -a "$__SCRIPT_START_TIME" -b "$script_end")
-  tags=$(default_apmz_tags)
-  if [[ -z "${tags}" ]]; then
+  if [[ -z "${__DEFAULT_TAGS}" ]]; then
     apmz metric -n "script-duration" -v "${duration}" -o >>"${__TMP_APMZ_BATCH_FILE}"
   else
-    apmz metric -n "script-duration" -v "${duration}" -t "${tags}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+    apmz metric -n "script-duration" -v "${duration}" -t "${__DEFAULT_TAGS}" -o >>"${__TMP_APMZ_BATCH_FILE}"
   fi
 
   if [[ -n "${__APP_INSIGHTS_KEY}" && -z "${__DRY_RUN}" ]]; then
@@ -222,17 +215,17 @@ exitAndFlush() {
 trap exitAndFlush EXIT
 `)
 
-func dataEnabled_bashShBytes() ([]byte, error) {
-	return _dataEnabled_bashSh, nil
+func dataEnabled_bashGoshBytes() ([]byte, error) {
+	return _dataEnabled_bashGosh, nil
 }
 
-func dataEnabled_bashSh() (*asset, error) {
-	bytes, err := dataEnabled_bashShBytes()
+func dataEnabled_bashGosh() (*asset, error) {
+	bytes, err := dataEnabled_bashGoshBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/enabled_bash.sh", size: 3779, mode: os.FileMode(420), modTime: time.Unix(1578699667, 0)}
+	info := bindataFileInfo{name: "data/enabled_bash.gosh", size: 3667, mode: os.FileMode(420), modTime: time.Unix(1578782196, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -289,8 +282,8 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"data/disabled_bash.sh": dataDisabled_bashSh,
-	"data/enabled_bash.sh":  dataEnabled_bashSh,
+	"data/disabled_bash.gosh": dataDisabled_bashGosh,
+	"data/enabled_bash.gosh":  dataEnabled_bashGosh,
 }
 
 // AssetDir returns the file names below a certain
@@ -335,8 +328,8 @@ type bintree struct {
 
 var _bintree = &bintree{nil, map[string]*bintree{
 	"data": &bintree{nil, map[string]*bintree{
-		"disabled_bash.sh": &bintree{dataDisabled_bashSh, map[string]*bintree{}},
-		"enabled_bash.sh":  &bintree{dataEnabled_bashSh, map[string]*bintree{}},
+		"disabled_bash.gosh": &bintree{dataDisabled_bashGosh, map[string]*bintree{}},
+		"enabled_bash.gosh":  &bintree{dataEnabled_bashGosh, map[string]*bintree{}},
 	}},
 }}
 
