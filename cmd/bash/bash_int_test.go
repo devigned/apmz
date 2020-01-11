@@ -137,9 +137,11 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 func generateTmpFiles(t *testing.T) (testScript, events string, del func()) {
 	eventFile, err := ioutil.TempFile("", "apmz_events.*.json")
 	require.NoError(t, err)
+	require.NoError(t, eventFile.Close())
 
 	scriptFile, err := ioutil.TempFile("", "apmz_test_script.*.sh")
 	require.NoError(t, err)
+	require.NoError(t, scriptFile.Close())
 
 	require.NoError(t, os.Chmod(scriptFile.Name(), 0700))
 
