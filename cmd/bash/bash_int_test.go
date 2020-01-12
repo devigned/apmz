@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	bash_test "github.com/devigned/apmz/internal/test/bash"
+	bashtest "github.com/devigned/apmz/internal/test/bash"
 )
 
 type (
@@ -94,8 +94,46 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 				_, err := os.Stat(eventFilePath)
 				require.NoError(t, err)
 				lines := readEventFile(t, eventFilePath)
-				fmt.Println(lines)
 				assert.Equal(t, 3, len(lines))
+			},
+		},
+		{
+			name: "WithKeyAsArgs",
+			env:  []string{"__PRESERVE_TMP_FILE=true"},
+			args: []string{"--api-key", "foo"},
+			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
+				_, err := os.Stat(eventFilePath)
+				require.NoError(t, err)
+				lines := readEventFile(t, eventFilePath)
+				assert.Equal(t, 2, len(lines))
+				assert.Empty(t, stderr)
+			},
+		},
+		{
+			name: "WithNameAsArgs",
+			env:  []string{"__PRESERVE_TMP_FILE=true"},
+			args: []string{"-n", "helloworld"},
+			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
+				_, err := os.Stat(eventFilePath)
+				require.NoError(t, err)
+				lines := readEventFile(t, eventFilePath)
+				assert.Equal(t, 2, len(lines))
+				assert.Contains(t, lines[0], `"Message":"helloworld-exit"`)
+				assert.Contains(t, lines[0], `{"code":"0"}`)
+				assert.Contains(t, lines[1], "helloworld-duration")
+			},
+		},
+		{
+			name: "WithDefaultTagsAsArgs",
+			env:  []string{"__PRESERVE_TMP_FILE=true"},
+			args: []string{"-t", "foo=bar,fast=slow"},
+			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
+				_, err := os.Stat(eventFilePath)
+				require.NoError(t, err)
+				lines := readEventFile(t, eventFilePath)
+				assert.Equal(t, 2, len(lines))
+				assert.Contains(t, lines[0], `"Properties":{"code":"0","fast":"slow","foo":"bar"}`)
+				assert.Contains(t, lines[1], `"Properties":{"fast":"slow","foo":"bar"}`)
 			},
 		},
 	}
@@ -119,12 +157,63 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 			var stdout, stderr bytes.Buffer
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
-			wd, err := os.Getwd()
-			require.NoError(t, err)
-			fmt.Println(wd)
-
 			cmd.Env = append(c.env, fmt.Sprintf("__TMP_APMZ_BATCH_FILE=%s", eventFileName))
-			err = cmd.Run()
+			err := cmd.Run()
+			outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+			if err != nil {
+				require.NoError(t, err, errStr)
+			}
+			c.assertions(t, outStr, errStr, eventFileName)
+		})
+	}
+}
+
+func TestNewBashCommandDisabled(t *testing.T) {
+	cases := []struct {
+		name       string
+		env        []string
+		args       []string
+		script     string
+		assertions func(t *testing.T, stdout, stderr, eventFilePath string)
+	}{
+		{
+			name: "RunWithDefaultSettings",
+			args: []string{"-d"},
+			script: `
+trace_info "foo"
+trace_err "bar"
+time_metric "some_metric" echo "me"
+`,
+			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
+				_, err := os.Stat(eventFilePath)
+				assert.Error(t, err, "file should not be made since apmz is disabled")
+				assert.Equal(t, "me\n", stdout)
+				assert.Empty(t, stderr)
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			scriptFileName, eventFileName, del := generateTmpFiles(t)
+			defer del()
+
+			writeTestScript(t, scriptFileName, testScriptInput{
+				Args:   strings.Join(c.args, " "),
+				Script: c.script,
+				BinDir: "../../bin",
+			})
+
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, scriptFileName)
+			var stdout, stderr bytes.Buffer
+			cmd.Stdout = &stdout
+			cmd.Stderr = &stderr
+			cmd.Env = append(c.env, fmt.Sprintf("__TMP_APMZ_BATCH_FILE=%s", eventFileName))
+			err := cmd.Run()
 			outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 			if err != nil {
 				require.NoError(t, err, errStr)
@@ -138,6 +227,7 @@ func generateTmpFiles(t *testing.T) (testScript, events string, del func()) {
 	eventFile, err := ioutil.TempFile("", "apmz_events.*.json")
 	require.NoError(t, err)
 	require.NoError(t, eventFile.Close())
+	_ = os.Remove(eventFile.Name()) // this will be made in the script, but we need a unique name
 
 	scriptFile, err := ioutil.TempFile("", "apmz_test_script.*.sh")
 	require.NoError(t, err)
@@ -146,13 +236,12 @@ func generateTmpFiles(t *testing.T) (testScript, events string, del func()) {
 	require.NoError(t, os.Chmod(scriptFile.Name(), 0700))
 
 	return scriptFile.Name(), eventFile.Name(), func() {
-		_ = os.Remove(eventFile.Name())
 		_ = os.Remove(scriptFile.Name())
 	}
 }
 
 func writeTestScript(t *testing.T, scriptFileName string, tmplArgs testScriptInput) {
-	bits, err := bash_test.Asset("cmd/bash/testdata/base_script.gosh")
+	bits, err := bashtest.Asset("cmd/bash/testdata/base_script.gosh")
 	require.NoError(t, err)
 
 	tmpl, err := template.New("script").Parse(string(bits))

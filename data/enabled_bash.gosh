@@ -77,8 +77,8 @@ time_metric_with_tags() {
 # should be invoked in the following way: `append_default_tags "${tags}"`
 append_default_tags() {
   local tags=$1
-  if [[ -z "${__DEFAULT_TAGS}" ]]; then
-    echo "${tags}"
+  if [[ -n "${__DEFAULT_TAGS}" && -n "${tags}" ]]; then
+    echo "${tags},${__DEFAULT_TAGS}"
   elif [[ -z "${tags}" ]]; then
     echo "${__DEFAULT_TAGS}"
   else
@@ -98,9 +98,9 @@ exitAndFlush() {
   script_end=$(apmz time unixnano)
   duration=$(apmz time diff -a "$__SCRIPT_START_TIME" -b "$script_end")
   if [[ -z "${__DEFAULT_TAGS}" ]]; then
-    apmz metric -n "script-duration" -v "${duration}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+    apmz metric -n "$__SCRIPT_NAME-duration" -v "${duration}" -o >>"${__TMP_APMZ_BATCH_FILE}"
   else
-    apmz metric -n "script-duration" -v "${duration}" -t "${__DEFAULT_TAGS}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+    apmz metric -n "$__SCRIPT_NAME-duration" -v "${duration}" -t "${__DEFAULT_TAGS}" -o >>"${__TMP_APMZ_BATCH_FILE}"
   fi
 
   if [[ -n "${__APP_INSIGHTS_KEY}" && -z "${__DRY_RUN}" ]]; then
