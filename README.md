@@ -22,15 +22,17 @@ $ apmz -h
 
 ## Usage
 
-`apmz` offers a bunch of simple functionality to get you started quickly, but first you need to 
+`apmz` offers a bunch of simple functionality to get you started quickly. First, you need to 
 create an [Application Insights resource and fetch the instrumentation key](https://docs.microsoft.com/en-us/azure/azure-monitor/app/create-new-resource#copy-the-instrumentation-key).
-Once you have an instrumentation key, you can run the script below. Be sure to add your key.
+Once you have created the resource and procured an instrumentation key, you can run the script below. 
+
+__Be sure to add your key to the script or as an ENV var (INSTRUMENATION_KEY).__
 
 ```bash
 #!/usr/bin/env bash
 
 # put apmz in the path if it is not already
-# this assumes ./bin holds the apmz binary
+# this assumes ./bin directory holds the apmz binary
 export PATH=./bin:$PATH
 
 eval "$(apmz bash -n "myscript" -t "default=tag,something=cool" --api-key "${INSTRUMENATION_KEY}" )"
@@ -52,7 +54,7 @@ metrics of our own.
 #!/usr/bin/env bash
 
 # put apmz in the path if it is not already
-# this assumes ./bin holds the apmz binary
+# this assumes ./bin directory holds the apmz binary
 export PATH=./bin:$PATH
 
 # inject tracing helpers into the script naming the script "myscript" with default tags of
@@ -74,7 +76,7 @@ trace_error "oh-no-an-error" "bang=crash"
 # log the duration of the function sleep_for_a_second and log it as a custom metric
 time_metric "my-metric-name" sleep_for_a_second
 
-# script ends here and the helper exit hook take the local logged events and sends them to 
+# script ends here and the helper exit hook takes the local logged events and sends them to 
 # Application Insights
 ```
 
