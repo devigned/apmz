@@ -7,14 +7,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewRootCmd(t *testing.T) {
+func TestNewRootCmdNames(t *testing.T) {
 	root, err := newRootCommand()
 	require.NoError(t, err)
 
-	expected := []string{"trace", "metric", "batch", "version"}
+	expected := []string{"trace", "metric", "batch", "version", "bash", "time"}
 	actual := make([]string, len(root.Commands()))
 	for i, c := range root.Commands() {
 		actual[i] = c.Name()
 	}
 	assert.ElementsMatch(t, expected, actual)
+}
+
+func TestExecute(t *testing.T) {
+	root, err := newRootCommand()
+	require.NoError(t, err)
+	assert.NoError(t, root.Execute())
 }

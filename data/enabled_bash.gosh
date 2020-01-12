@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+__TMP_APMZ_BATCH_FILE="${__TMP_APMZ_BATCH_FILE:-$(mktemp /tmp/apmz.XXXXXX)}"
+__SCRIPT_START_TIME=$(apmz time unixnano)
+__SCRIPT_NAME="${__SCRIPT_NAME:-{{.ScriptName}}}"
+__APP_INSIGHTS_KEY="${__APP_INSIGHTS_KEY:-{{.AppInsightsKey}}}"
+__DEFAULT_TAGS="${__DEFAULT_TAGS:-{{.DefaultTags}}}"
+
+# trace_err will log an error level trace event to the tmp batch file in $TMP_APMZ_BATCH_FILE
+#
+# should be invoked in the following way: `trace_err "trace_name" "tag1,tag2,tag3"`
+trace_err() {
+  local name=$1 tags=$2
+  tags=$(append_default_tags "${tags}")
+  if [[ -z "${tags}" ]]; then
+    apmz trace -n "${name}" -l 3 -o >>"${__TMP_APMZ_BATCH_FILE}"
+  else
+    apmz trace -n "${name}" -l 3 -t "${tags}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+  fi
+}
+
+# trace_info will log an info level trace event to the tmp batch file in $TMP_APMZ_BATCH_FILE
+#
+# should be invoked in the following way: `trace_info "trace_name" "tag1,tag2,tag3"`
+trace_info() {
+  local name=$1 tags=$2
+  tags=$(append_default_tags "${tags}")
+  if [[ -z "${tags}" ]]; then
+    apmz trace -n "${name}" -l 0 -o >>"${__TMP_APMZ_BATCH_FILE}"
+  else
+    apmz trace -n "${name}" -t "${tags}" -l 0 -o >>"${__TMP_APMZ_BATCH_FILE}"
+  fi
+}
+
+# time_metric will log a custom metric event to the tmp batch file in $TMP_APMZ_BATCH_FILE
+#
+# should be invoked in the following way: `time_metric "metric_name" fuction_to_time(...)`
+time_metric() {
+  local name start end diff tags
+  name=$1
+  shift
+  start=$(apmz time unixnano)
+  "$@"
+  end=$(apmz time unixnano)
+  diff=$(apmz time diff -a "${start}" -b "${end}")
+  tags=$(append_default_tags)
+  if [[ -z "${tags}" ]]; then
+    apmz metric -n "${name}" -v "${diff}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+  else
+    apmz metric -n "${name}" -v "${diff}" -t "${tags}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+  fi
+}
+
+# time_metric_with_tags will log a custom metric event to the tmp batch file in $TMP_APMZ_BATCH_FILE
+#
+# should be invoked in the following way: `time_metric "metric_name" "tag1=value,tag2=value" fuction_to_time(...)`
+time_metric_with_tags() {
+  local name tags start end diff
+  name=$1
+  shift
+  tags=$1
+  shift
+  start=$(apmz time unixnano)
+  "$@"
+  end=$(apmz time unixnano)
+  diff=$(apmz time diff -a "${start}" -b "${end}")
+  tags=$(append_default_tags "${tags}")
+  if [[ -z "${tags}" ]]; then
+    apmz metric -n "${name}" -v "${diff}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+  else
+    apmz metric -n "${name}" -v "${diff}" -t "${tags}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+  fi
+}
+
+# append_default_tags will append default_apmz_tags to the input tags string
+#
+# should be invoked in the following way: `append_default_tags "${tags}"`
+append_default_tags() {
+  local tags=$1
+  if [[ -n "${__DEFAULT_TAGS}" && -n "${tags}" ]]; then
+    echo "${tags},${__DEFAULT_TAGS}"
+  elif [[ -z "${tags}" ]]; then
+    echo "${__DEFAULT_TAGS}"
+  else
+    echo "${tags}"
+  fi
+}
+
+exitAndFlush() {
+  local tags script_end duration
+  tags=$(append_default_tags "code=$?")
+  if [[ "$?" == "0" ]]; then
+    trace_info "$__SCRIPT_NAME-exit" "${tags}"
+  else
+    trace_err "$__SCRIPT_NAME-exit" "${tags}"
+  fi
+
+  script_end=$(apmz time unixnano)
+  duration=$(apmz time diff -a "$__SCRIPT_START_TIME" -b "$script_end")
+  if [[ -z "${__DEFAULT_TAGS}" ]]; then
+    apmz metric -n "$__SCRIPT_NAME-duration" -v "${duration}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+  else
+    apmz metric -n "$__SCRIPT_NAME-duration" -v "${duration}" -t "${__DEFAULT_TAGS}" -o >>"${__TMP_APMZ_BATCH_FILE}"
+  fi
+
+  if [[ -n "${__APP_INSIGHTS_KEY}" && -z "${__DRY_RUN}" ]]; then
+    apmz batch -f "${__TMP_APMZ_BATCH_FILE}" --api-key "${__APP_INSIGHTS_KEY}"
+  fi
+
+  if [[ -z "${__PRESERVE_TMP_FILE}" ]]; then
+    rm "${__TMP_APMZ_BATCH_FILE}"
+  fi
+}
+
+trap exitAndFlush EXIT

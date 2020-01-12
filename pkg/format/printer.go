@@ -11,6 +11,7 @@ type (
 	// Printer prints objects
 	Printer interface {
 		Print(obj interface{}) error
+		Printf(format string, args ...interface{})
 		ErrPrintf(format string, args ...interface{})
 	}
 
@@ -45,6 +46,11 @@ func (stdPrinter StdPrinter) Print(obj interface{}) error {
 	default:
 		return fmt.Errorf("unable to print %v as type %s", obj, stdPrinter.Format)
 	}
+}
+
+// Printf prints a formatted string
+func (stdPrinter StdPrinter) Printf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
 }
 
 // ErrPrintf will print a formatted string to os.Stderr

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+export PATH={{.BinDir}}:$PATH
+
+eval "$(apmz bash {{.Args}})"
+
+{{.Script }}

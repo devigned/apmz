@@ -12,8 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/devigned/apmz/cmd/bash"
 	"github.com/devigned/apmz/cmd/batch"
 	"github.com/devigned/apmz/cmd/metric"
+	timecmd "github.com/devigned/apmz/cmd/time"
 	"github.com/devigned/apmz/cmd/trace"
 	"github.com/devigned/apmz/pkg/format"
 	"github.com/devigned/apmz/pkg/service"
@@ -78,12 +80,17 @@ func newRootCommand() (*cobra.Command, error) {
 		PrinterFactory: func() format.Printer {
 			return printer
 		},
+		APIKeyFactory: func() string {
+			return apiKey
+		},
 	}
 
 	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
 		trace.NewTraceCommand,
 		metric.NewMetricCommand,
 		batch.NewBatchCommand,
+		bash.NewBashCommand,
+		timecmd.NewTimeCommandGroup,
 		func(locator service.CommandServicer) (*cobra.Command, error) {
 			return newVersionCommand(), nil
 		},
