@@ -77,12 +77,20 @@ time_metric_with_tags() {
 # should be invoked in the following way: `append_default_tags "${tags}"`
 append_default_tags() {
   local tags=$1
-  if [[ -n "${__DEFAULT_TAGS}" && -n "${tags}" ]]; then
-    echo "${tags},${__DEFAULT_TAGS}"
-  elif [[ -z "${tags}" ]]; then
-    echo "${__DEFAULT_TAGS}"
+  join_tags "$1" "${__DEFAULT_TAGS}"
+}
+
+# append_default_tags will append default_apmz_tags to the input tags string
+#
+# should be invoked in the following way: `join_tags "${tags_left}" "${tags_right}"`
+join_tags() {
+  local left=$1 right=$2
+  if [[ -n "${left}" && -n "${right}" ]]; then
+    echo "${left},${right}"
+  elif [[ -z "${left}" ]]; then
+    echo "${right}"
   else
-    echo "${tags}"
+    echo "${left}"
   fi
 }
 
