@@ -71,7 +71,7 @@ func cmdBashTestdataBase_scriptGosh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cmd/bash/testdata/base_script.gosh", size: 95, mode: os.FileMode(420), modTime: time.Unix(1578759635, 0)}
+	info := bindataFileInfo{name: "cmd/bash/testdata/base_script.gosh", size: 95, mode: os.FileMode(420), modTime: time.Unix(1578809708, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

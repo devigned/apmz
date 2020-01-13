@@ -23,6 +23,6 @@ append_default_tags() {
   return
 }
 
-default_apmz_tags() {
+join_tags() {
   return
 }
