@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 __TMP_APMZ_BATCH_FILE="${__TMP_APMZ_BATCH_FILE:-$(mktemp /tmp/apmz.XXXXXX)}"
+__SCRIPT_SESSION_ID="${__SCRIPT_SESSION_ID:-$(apmz uuid)}"
 __SCRIPT_START_TIME=$(apmz time unixnano)
 __SCRIPT_NAME="${__SCRIPT_NAME:-{{.ScriptName}}}"
 __APP_INSIGHTS_KEY="${__APP_INSIGHTS_KEY:-{{.AppInsightsKey}}}"
 __DEFAULT_TAGS="${__DEFAULT_TAGS:-{{.DefaultTags}}}"
+__DEFAULT_TIME="${__DEFAULT_TIME:-sec}"
 
 # trace_err will log an error level trace event to the tmp batch file in $TMP_APMZ_BATCH_FILE
 #
@@ -42,7 +44,7 @@ time_metric() {
   start=$(apmz time unixnano)
   "$@"
   end=$(apmz time unixnano)
-  diff=$(apmz time diff -a "${start}" -b "${end}")
+  diff=$(apmz time diff -a "${start}" -b "${end}" -r "${__DEFAULT_TIME}")
   tags=$(append_default_tags)
   if [[ -z "${tags}" ]]; then
     apmz metric -n "${name}" -v "${diff}" -o >>"${__TMP_APMZ_BATCH_FILE}"
@@ -63,7 +65,7 @@ time_metric_with_tags() {
   start=$(apmz time unixnano)
   "$@"
   end=$(apmz time unixnano)
-  diff=$(apmz time diff -a "${start}" -b "${end}")
+  diff=$(apmz time diff -a "${start}" -b "${end}" -r "${__DEFAULT_TIME}")
   tags=$(append_default_tags "${tags}")
   if [[ -z "${tags}" ]]; then
     apmz metric -n "${name}" -v "${diff}" -o >>"${__TMP_APMZ_BATCH_FILE}"
@@ -104,7 +106,7 @@ exitAndFlush() {
   fi
 
   script_end=$(apmz time unixnano)
-  duration=$(apmz time diff -a "$__SCRIPT_START_TIME" -b "$script_end")
+  duration=$(apmz time diff -a "$__SCRIPT_START_TIME" -b "$script_end"  -r "${__DEFAULT_TIME}")
   if [[ -z "${__DEFAULT_TAGS}" ]]; then
     apmz metric -n "$__SCRIPT_NAME-duration" -v "${duration}" -o >>"${__TMP_APMZ_BATCH_FILE}"
   else
@@ -121,3 +123,5 @@ exitAndFlush() {
 }
 
 trap exitAndFlush EXIT
+
+__DEFAULT_TAGS=$(join_tags "${__DEFAULT_TAGS}" "correlation_id=${__SCRIPT_SESSION_ID}" )

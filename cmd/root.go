@@ -17,6 +17,7 @@ import (
 	"github.com/devigned/apmz/cmd/metric"
 	timecmd "github.com/devigned/apmz/cmd/time"
 	"github.com/devigned/apmz/cmd/trace"
+	"github.com/devigned/apmz/cmd/uuid"
 	"github.com/devigned/apmz/pkg/format"
 	"github.com/devigned/apmz/pkg/service"
 )
@@ -91,6 +92,7 @@ func newRootCommand() (*cobra.Command, error) {
 		batch.NewBatchCommand,
 		bash.NewBashCommand,
 		timecmd.NewTimeCommandGroup,
+		uuid.NewUUIDCommand,
 		func(locator service.CommandServicer) (*cobra.Command, error) {
 			return newVersionCommand(), nil
 		},

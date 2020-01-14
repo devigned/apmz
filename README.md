@@ -98,6 +98,7 @@ Available Commands:
   metric      send a metric (customMetrics) to Application Insights
   time        time related commands
   trace       send a trace event (traces) to Application Insights
+  uuid        generate a new uuid
   version     Print the git ref
 
 Flags:
