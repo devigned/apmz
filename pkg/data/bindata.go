@@ -79,7 +79,7 @@ append_default_tags() {
   return
 }
 
-default_apmz_tags() {
+join_tags() {
   return
 }`)
 
@@ -93,7 +93,7 @@ func dataDisabled_bashGosh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/disabled_bash.gosh", size: 236, mode: os.FileMode(420), modTime: time.Unix(1578612908, 0)}
+	info := bindataFileInfo{name: "data/disabled_bash.gosh", size: 228, mode: os.FileMode(420), modTime: time.Unix(1578931050, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -101,10 +101,12 @@ func dataDisabled_bashGosh() (*asset, error) {
 var _dataEnabled_bashGosh = []byte(`#!/usr/bin/env bash
 
 __TMP_APMZ_BATCH_FILE="${__TMP_APMZ_BATCH_FILE:-$(mktemp /tmp/apmz.XXXXXX)}"
+__SCRIPT_SESSION_ID="${__SCRIPT_SESSION_ID:-$(apmz uuid)}"
 __SCRIPT_START_TIME=$(apmz time unixnano)
 __SCRIPT_NAME="${__SCRIPT_NAME:-{{.ScriptName}}}"
 __APP_INSIGHTS_KEY="${__APP_INSIGHTS_KEY:-{{.AppInsightsKey}}}"
 __DEFAULT_TAGS="${__DEFAULT_TAGS:-{{.DefaultTags}}}"
+__DEFAULT_TIME="${__DEFAULT_TIME:-sec}"
 
 # trace_err will log an error level trace event to the tmp batch file in $TMP_APMZ_BATCH_FILE
 #
@@ -142,7 +144,7 @@ time_metric() {
   start=$(apmz time unixnano)
   "$@"
   end=$(apmz time unixnano)
-  diff=$(apmz time diff -a "${start}" -b "${end}")
+  diff=$(apmz time diff -a "${start}" -b "${end}" -r "${__DEFAULT_TIME}")
   tags=$(append_default_tags)
   if [[ -z "${tags}" ]]; then
     apmz metric -n "${name}" -v "${diff}" -o >>"${__TMP_APMZ_BATCH_FILE}"
@@ -163,7 +165,7 @@ time_metric_with_tags() {
   start=$(apmz time unixnano)
   "$@"
   end=$(apmz time unixnano)
-  diff=$(apmz time diff -a "${start}" -b "${end}")
+  diff=$(apmz time diff -a "${start}" -b "${end}" -r "${__DEFAULT_TIME}")
   tags=$(append_default_tags "${tags}")
   if [[ -z "${tags}" ]]; then
     apmz metric -n "${name}" -v "${diff}" -o >>"${__TMP_APMZ_BATCH_FILE}"
@@ -177,12 +179,20 @@ time_metric_with_tags() {
 # should be invoked in the following way: `+"`"+`append_default_tags "${tags}"`+"`"+`
 append_default_tags() {
   local tags=$1
-  if [[ -n "${__DEFAULT_TAGS}" && -n "${tags}" ]]; then
-    echo "${tags},${__DEFAULT_TAGS}"
-  elif [[ -z "${tags}" ]]; then
-    echo "${__DEFAULT_TAGS}"
+  join_tags "$1" "${__DEFAULT_TAGS}"
+}
+
+# append_default_tags will append default_apmz_tags to the input tags string
+#
+# should be invoked in the following way: `+"`"+`join_tags "${tags_left}" "${tags_right}"`+"`"+`
+join_tags() {
+  local left=$1 right=$2
+  if [[ -n "${left}" && -n "${right}" ]]; then
+    echo "${left},${right}"
+  elif [[ -z "${left}" ]]; then
+    echo "${right}"
   else
-    echo "${tags}"
+    echo "${left}"
   fi
 }
 
@@ -196,7 +206,7 @@ exitAndFlush() {
   fi
 
   script_end=$(apmz time unixnano)
-  duration=$(apmz time diff -a "$__SCRIPT_START_TIME" -b "$script_end")
+  duration=$(apmz time diff -a "$__SCRIPT_START_TIME" -b "$script_end"  -r "${__DEFAULT_TIME}")
   if [[ -z "${__DEFAULT_TAGS}" ]]; then
     apmz metric -n "$__SCRIPT_NAME-duration" -v "${duration}" -o >>"${__TMP_APMZ_BATCH_FILE}"
   else
@@ -213,7 +223,8 @@ exitAndFlush() {
 }
 
 trap exitAndFlush EXIT
-`)
+
+__DEFAULT_TAGS=$(join_tags "${__DEFAULT_TAGS}" "correlation_id=${__SCRIPT_SESSION_ID}" )`)
 
 func dataEnabled_bashGoshBytes() ([]byte, error) {
 	return _dataEnabled_bashGosh, nil
@@ -225,7 +236,7 @@ func dataEnabled_bashGosh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/enabled_bash.gosh", size: 3717, mode: os.FileMode(420), modTime: time.Unix(1578806788, 0)}
+	info := bindataFileInfo{name: "data/enabled_bash.gosh", size: 4191, mode: os.FileMode(420), modTime: time.Unix(1578958887, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

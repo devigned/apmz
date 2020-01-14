@@ -3,6 +3,7 @@ package bash_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,10 +13,12 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	bashtest "github.com/devigned/apmz/internal/test/bash"
+	"github.com/devigned/apmz/pkg/service"
 )
 
 type (
@@ -119,7 +122,7 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 				lines := readEventFile(t, eventFilePath)
 				assert.Equal(t, 2, len(lines))
 				assert.Contains(t, lines[0], `"Message":"helloworld-exit"`)
-				assert.Contains(t, lines[0], `{"code":"0"}`)
+				assert.Contains(t, lines[0], `"code":"0"`)
 				assert.Contains(t, lines[1], "helloworld-duration")
 			},
 		},
@@ -131,9 +134,32 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 				_, err := os.Stat(eventFilePath)
 				require.NoError(t, err)
 				lines := readEventFile(t, eventFilePath)
-				assert.Equal(t, 2, len(lines))
-				assert.Contains(t, lines[0], `"Properties":{"code":"0","fast":"slow","foo":"bar"}`)
-				assert.Contains(t, lines[1], `"Properties":{"fast":"slow","foo":"bar"}`)
+				events := eventsFromLines(t, lines)
+				assert.Equal(t, 2, len(events))
+
+				assert.Equal(t, events[0].Type, "TraceTelemetry")
+				props0 := events[0].Item.GetProperties()
+				assert.Equal(t, props0["code"], "0")
+				assert.Equal(t, props0["fast"], "slow")
+				assert.Equal(t, props0["foo"], "bar")
+				assert.NotEmpty(t, props0["correlation_id"])
+
+				assert.Equal(t, events[1].Type, "MetricTelemetry")
+				props1 := events[1].Item.GetProperties()
+				assert.Equal(t, props1["fast"], "slow")
+				assert.Equal(t, props1["foo"], "bar")
+				assert.NotEmpty(t, props1["correlation_id"])
+
+				assert.Equal(t, props0["correlation_id"], props1["correlation_id"])
+			},
+		},
+		{
+			name: "HasSessionIDSet",
+			script: "echo $__SCRIPT_SESSION_ID",
+			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
+				stdout = strings.TrimSuffix(stdout,  "\n")
+				_, err := uuid.Parse(stdout)
+				assert.NoError(t, err, stdout)
 			},
 		},
 	}
@@ -259,4 +285,14 @@ func readEventFile(t *testing.T, eventFileName string) []string {
 
 	str := strings.TrimSuffix(string(bits), "\n")
 	return strings.Split(str, "\n")
+}
+
+func eventsFromLines(t *testing.T, lines []string) []service.Event {
+	events := make([]service.Event, len(lines))
+	for i, line := range lines {
+		var event service.Event
+		require.NoError(t, json.Unmarshal([]byte(line), &event))
+		events[i] = event
+	}
+	return events
 }

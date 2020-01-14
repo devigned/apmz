@@ -16,18 +16,18 @@ V = 0
 Q = $(if $(filter 1,$V),,@)
 
 .PHONY: all
-all: install-tools generate fmt lint vet tidy build
+all: build
 
 .PHONY: install-tools
 install-tools: ; $(info $(M) installing tools…)
 	$(Q) make -C ./tools
 
 .PHONY: build
-build: lint tidy ; $(info $(M) buiding ./bin/$(APP))
+build: generate lint tidy ; $(info $(M) buiding ./bin/$(APP))
 	$Q $(GO) build -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -o ./bin/$(APP)
 
 .PHONY: generate
-generate: ; $(info $(M) running generate…)
+generate: install-tools ; $(info $(M) running generate…)
 	$Q $(BINDATA) -o ./pkg/data/bindata.go -pkg data -nocompress ./data/...
 
 .PHONY: lint
@@ -53,7 +53,7 @@ build-debug: ; $(info $(M) buiding debug...)
 	$Q $(GO)  build -o ./bin/$(APP) -tags debug
 
 .PHONY: test-generate ; $(info $(M) running test-generate…)
-test-generate: ; $(info $(M) generating test data…)
+test-generate: install-tools ; $(info $(M) generating test data…)
 	$Q $(BINDATA) -o ./internal/test/bash/bindata.go -pkg bash_test -nocompress ./cmd/bash/testdata/...
 
 .PHONY: test

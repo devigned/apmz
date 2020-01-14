@@ -48,7 +48,7 @@ func newDiffUnixNanoCommand(sl service.CommandServicer) (*cobra.Command, error) 
 	f := cmd.Flags()
 	f.Int64VarP(&oArgs.A, "first", "a", 0, "first time in unixnano format")
 	f.Int64VarP(&oArgs.B, "second", "b", 0, "second time in unixnano format")
-	f.StringVarP(&oArgs.Format, "resolution", "r", "nano", "time resolution [nano, micro, ms, sec]")
+	f.StringVarP(&oArgs.Format, "resolution", "r", "sec", "time resolution [nano, micro, ms, sec]")
 
 	return cmd, nil
 }
