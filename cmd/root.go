@@ -14,10 +14,12 @@ import (
 
 	"github.com/devigned/apmz/cmd/bash"
 	"github.com/devigned/apmz/cmd/batch"
+	"github.com/devigned/apmz/cmd/metadata"
 	"github.com/devigned/apmz/cmd/metric"
 	timecmd "github.com/devigned/apmz/cmd/time"
 	"github.com/devigned/apmz/cmd/trace"
 	"github.com/devigned/apmz/cmd/uuid"
+	"github.com/devigned/apmz/pkg/azmeta"
 	"github.com/devigned/apmz/pkg/format"
 	"github.com/devigned/apmz/pkg/service"
 )
@@ -84,6 +86,9 @@ func newRootCommand() (*cobra.Command, error) {
 		APIKeyFactory: func() string {
 			return apiKey
 		},
+		MetadataFactory: func() (service.Metadater, error) {
+			return azmeta.New()
+		},
 	}
 
 	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
@@ -93,6 +98,7 @@ func newRootCommand() (*cobra.Command, error) {
 		bash.NewBashCommand,
 		timecmd.NewTimeCommandGroup,
 		uuid.NewUUIDCommand,
+		metadata.NewMetadataCommandGroup,
 		func(locator service.CommandServicer) (*cobra.Command, error) {
 			return newVersionCommand(), nil
 		},

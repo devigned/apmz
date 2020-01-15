@@ -1,0 +1,60 @@
+{
+  "compute": {
+    "azEnvironment": "AzurePublicCloud",
+    "customData": "",
+    "location": "westus2",
+    "name": "test1",
+    "offer": "UbuntuServer",
+    "osType": "Linux",
+    "placementGroupId": "",
+    "plan": {
+      "name": "",
+      "product": "",
+      "publisher": ""
+    },
+    "platformFaultDomain": "0",
+    "platformUpdateDomain": "0",
+    "provider": "Microsoft.Compute",
+    "publicKeys": [
+      {
+        "keyData": "keydata",
+        "path": "/home/azureuser/.ssh/authorized_keys"
+      }
+    ],
+    "publisher": "Canonical",
+    "resourceGroupName": "test",
+    "resourceId": "/subscriptions/someresource/resourceGroups/test/providers/Microsoft.Compute/virtualMachines/test1",
+    "sku": "18.04-LTS",
+    "subscriptionId": "someuuid",
+    "tags": "",
+    "version": "18.04.201912180",
+    "vmId": "vmid",
+    "vmScaleSetName": "",
+    "vmSize": "Standard_DS1_v2",
+    "zone": ""
+  },
+  "network": {
+    "interface": [
+      {
+        "ipv4": {
+          "ipAddress": [
+            {
+              "privateIpAddress": "10.0.0.4",
+              "publicIpAddress": "52.229.8.12"
+            }
+          ],
+          "subnet": [
+            {
+              "address": "10.0.0.0",
+              "prefix": "24"
+            }
+          ]
+        },
+        "ipv6": {
+          "ipAddress": []
+        },
+        "macAddress": "000D3AC2FB90"
+      }
+    ]
+  }
+}
