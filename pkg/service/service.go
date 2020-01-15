@@ -1,36 +1,41 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sync"
 
 	"github.com/devigned/apmz-sdk/apmz"
 
+	"github.com/devigned/apmz/pkg/azmeta"
 	"github.com/devigned/apmz/pkg/format"
 )
 
 type (
 	// Registry holds the factories and services needed for command execution
 	Registry struct {
-		doOnce         sync.Once
-		APMerFactory   func() (APMer, error)
-		PrinterFactory func() format.Printer
-		APIKeyFactory  func() string
+		APMerFactory    func() (APMer, error)
+		PrinterFactory  func() format.Printer
+		APIKeyFactory   func() string
+		MetadataFactory func() (Metadater, error)
 	}
 
 	// CommandServicer provides all functionality needed for command execution
 	CommandServicer interface {
+		GetMetadater() (Metadater, error)
 		GetAPMer() (APMer, error)
 		GetPrinter() format.Printer
 		GetKey() string
 	}
 
-	//// Closer provides the ability to close the client
-	//Closer interface {
-	//	Close(retryTimeout ...time.Duration) <-chan struct{}
-	//}
+	// Metadater abstracts the underlying implementation of the instance metadata service
+	Metadater interface {
+		GetInstance(ctx context.Context, middleware ...azmeta.MiddlewareFunc) (*azmeta.Instance, error)
+		GetAttestation(ctx context.Context, nonce string, middleware ...azmeta.MiddlewareFunc) (*azmeta.Attestation, error)
+		GetScheduledEvents(ctx context.Context, middleware ...azmeta.MiddlewareFunc) (*azmeta.ScheduledEvents, error)
+		AckScheduledEvents(ctx context.Context, acks azmeta.AckEvents, middleware ...azmeta.MiddlewareFunc) error
+	}
 
 	// APMer provides the behaviors needed to send events to Azure Application Insights
 	APMer interface {
@@ -64,6 +69,11 @@ const (
 // GetAPMer returns an instance of an Azure Application Insights client
 func (r *Registry) GetAPMer() (APMer, error) {
 	return r.APMerFactory()
+}
+
+// GetMetadater returns an instance of an instance metadata service
+func (r *Registry) GetMetadater() (Metadater, error) {
+	return r.MetadataFactory()
 }
 
 // GetPrinter will return a printer for printing command output
