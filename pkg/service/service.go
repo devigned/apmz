@@ -35,6 +35,7 @@ type (
 		GetAttestation(ctx context.Context, nonce string, middleware ...azmeta.MiddlewareFunc) (*azmeta.Attestation, error)
 		GetScheduledEvents(ctx context.Context, middleware ...azmeta.MiddlewareFunc) (*azmeta.ScheduledEvents, error)
 		AckScheduledEvents(ctx context.Context, acks azmeta.AckEvents, middleware ...azmeta.MiddlewareFunc) error
+		GetIdentityToken(ctx context.Context, tokenReq azmeta.ResourceAndIdentity, middleware ...azmeta.MiddlewareFunc) (*azmeta.IdentityToken, error)
 	}
 
 	// APMer provides the behaviors needed to send events to Azure Application Insights

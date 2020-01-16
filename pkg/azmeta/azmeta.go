@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/devigned/tab"
+	"github.com/google/uuid"
 )
 
 type (
@@ -154,12 +155,37 @@ type (
 		NotBefore    time.Time   `json:"NotBefore,omitempty"`
 	}
 
+	// IdentityToken is returned by the identity metadata service (basically an AAD JWT)
+	//
+	// use the access token to auth against Azure services
+	IdentityToken struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		ExpiresIn    string `json:"expires_in"`
+		ExpiresOn    string `json:"expires_on"`
+		NotBefore    string `json:"not_before"`
+		Resource     string `json:"resource"`
+		TokenType    string `json:"token_type"`
+	}
+
+	// ResourceAndIdentity is the Azure resource ID and the identity to access that resource
+	//
+	// For more info about Azure resource ids: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities
+	ResourceAndIdentity struct {
+		Resource          string     `json:"resource,omitempty"`
+		ObjectID          *uuid.UUID `json:"object_id,omitempty"`
+		ClientID          *uuid.UUID `json:"client_id,omitempty"`
+		ManagedIdentityID *string    `json:"mi_res_id,omitempty"` // Azure resource id
+	}
+
 	// Client is the HTTP client for the Cloud Partner Portal
 	Client struct {
-		HTTPClient         *http.Client
-		InstanceAPIVersion string
-		BaseURI            string
-		mwStack            []MiddlewareFunc
+		HTTPClient                *http.Client
+		InstanceAPIVersion        string
+		IdentityAPIVersion        string
+		ScheduledEventsAPIVersion string
+		BaseURI                   string
+		mwStack                   []MiddlewareFunc
 	}
 
 	// ClientOption is a variadic optional configuration func
@@ -191,8 +217,11 @@ const (
 	// InstanceAPIVersion is the highest common API version supported across clouds: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/instance-metadata-service#service-availability
 	InstanceAPIVersion = "2019-04-30"
 
-	// ScheduledEventsAPIVersion is the
+	// ScheduledEventsAPIVersion is the highest version of the API at the time
 	ScheduledEventsAPIVersion = "2017-11-01"
+
+	// IdentityAPIVersion is the highest version of the Identity API at the time
+	IdentityAPIVersion = "2018-02-01"
 
 	// Freeze the Virtual Machine is scheduled to pause for a few seconds. CPU and network connectivity may be
 	// suspended, but there is no impact on memory or open files.
@@ -244,8 +273,10 @@ var (
 // New creates a new Azure Metadata client
 func New(opts ...ClientOption) (*Client, error) {
 	c := &Client{
-		BaseURI:            MetadataBaseURI,
-		InstanceAPIVersion: InstanceAPIVersion,
+		BaseURI:                   MetadataBaseURI,
+		InstanceAPIVersion:        InstanceAPIVersion,
+		IdentityAPIVersion:        IdentityAPIVersion,
+		ScheduledEventsAPIVersion: ScheduledEventsAPIVersion,
 	}
 
 	for _, opt := range opts {
@@ -286,7 +317,7 @@ func (c *Client) GetAttestation(ctx context.Context, nonce string, middleware ..
 
 // GetScheduledEvents will fetch the scheduled events for the local machine
 func (c *Client) GetScheduledEvents(ctx context.Context, middleware ...MiddlewareFunc) (*ScheduledEvents, error) {
-	path := fmt.Sprintf("scheduledevents?api-version=%s", ScheduledEventsAPIVersion)
+	path := fmt.Sprintf("scheduledevents?api-version=%s", c.ScheduledEventsAPIVersion)
 	res, err := c.execute(ctx, http.MethodGet, path, nil, middleware...)
 	defer closeResponse(ctx, res)
 
@@ -326,7 +357,7 @@ func (c *Client) AckScheduledEvents(ctx context.Context, acks AckEvents, middlew
 // GetInstance will fetch the instance metadata from the local machine
 func (c *Client) GetInstance(ctx context.Context, middleware ...MiddlewareFunc) (*Instance, error) {
 	path := fmt.Sprintf("instance?api-version=%s", c.InstanceAPIVersion)
-	res, err := c.execute(ctx, http.MethodGet, path, nil)
+	res, err := c.execute(ctx, http.MethodGet, path, nil, middleware...)
 	defer closeResponse(ctx, res)
 
 	if err != nil {
@@ -339,6 +370,36 @@ func (c *Client) GetInstance(ctx context.Context, middleware ...MiddlewareFunc) 
 	}
 
 	return &instance, nil
+}
+
+// GetIdentityToken will fetch an authentication token from the instance identity service
+func (c *Client) GetIdentityToken(ctx context.Context, tokenReq ResourceAndIdentity, middleware ...MiddlewareFunc) (*IdentityToken, error) {
+	if tokenReq.Resource == "" {
+		return nil, fmt.Errorf("resource uri must be supplied; see https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities")
+	}
+
+	path := fmt.Sprintf("identity/oauth2/token?api-version=%s&resource=%s", c.IdentityAPIVersion, tokenReq.Resource)
+	if tokenReq.ManagedIdentityID != nil && (tokenReq.ClientID == nil || tokenReq.ObjectID == nil) {
+		return nil, fmt.Errorf("if specifying a managed identity resource id, then client ID and object ID are required")
+	}
+
+	if tokenReq.ManagedIdentityID != nil {
+		path = fmt.Sprintf("%s&mi_res_id=%s&client_id=%s&object_id=%s", path, *tokenReq.ManagedIdentityID, (*tokenReq.ClientID).String(), (*tokenReq.ObjectID).String())
+	}
+
+	res, err := c.execute(ctx, http.MethodGet, path, nil, middleware...)
+	defer closeResponse(ctx, res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var token IdentityToken
+	if err := readAndUnmarshal(res, &token); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal to Instance: %w", err)
+	}
+
+	return &token, nil
 }
 
 func (c *Client) execute(ctx context.Context, method string, entityPath string, body io.Reader, mw ...MiddlewareFunc) (*http.Response, error) {

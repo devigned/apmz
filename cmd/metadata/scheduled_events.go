@@ -49,11 +49,13 @@ func newScheduledEventsCommand(sl service.CommandServicer) (*cobra.Command, erro
 			m, err := sl.GetMetadater()
 			if err != nil {
 				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v", err)
+				return err
 			}
 
 			se, err := m.GetScheduledEvents(ctx)
 			if err != nil {
 				sl.GetPrinter().ErrPrintf("unable to fetch scheduled events metadata: %v", err)
+				return err
 			}
 
 			return sl.GetPrinter().Print(se)
@@ -76,6 +78,7 @@ func newScheduledEventsAckCommand(sl service.CommandServicer) (*cobra.Command, e
 			m, err := sl.GetMetadater()
 			if err != nil {
 				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v", err)
+				return err
 			}
 
 			ackEvents := make([]azmeta.AckEvent, len(oArgs.EventIds))
@@ -86,6 +89,7 @@ func newScheduledEventsAckCommand(sl service.CommandServicer) (*cobra.Command, e
 			ack := azmeta.AckEvents{StartRequests:ackEvents}
 			if err := m.AckScheduledEvents(ctx, ack); err != nil {
 				sl.GetPrinter().ErrPrintf("unable to fetch scheduled events metadata: %v", err)
+				return err
 			}
 
 			return nil
