@@ -67,7 +67,8 @@ func TestNewBashCommand(t *testing.T) {
 				p := new(mocks.PrinterMock)
 				p.On("Printf", mock.MatchedBy(func(script string) bool {
 					return strings.Contains(script, `__SCRIPT_NAME="${__SCRIPT_NAME:-testcmd}"`) &&
-						strings.Contains(script, `__DEFAULT_TAGS="${__DEFAULT_TAGS:-foo1=bar,bin=baz}"`)
+						(strings.Contains(script, `__DEFAULT_TAGS="${__DEFAULT_TAGS:-foo1=bar,bin=baz}"`) ||
+							strings.Contains(script, `__DEFAULT_TAGS="${__DEFAULT_TAGS:-bin=baz,foo1=bar}"`))
 
 				}), mock.Anything)
 				s.On("GetPrinter").Return(p)

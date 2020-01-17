@@ -23,7 +23,7 @@ install-tools: ; $(info $(M) installing tools…)
 	$(Q) make -C ./tools
 
 .PHONY: build
-build: generate lint tidy ; $(info $(M) buiding ./bin/$(APP))
+build: generate fmt lint tidy ; $(info $(M) buiding ./bin/$(APP))
 	$Q $(GO) build -ldflags "-X $(PACKAGE)/cmd.GitCommit=$(VERSION)" -o ./bin/$(APP)
 
 .PHONY: generate

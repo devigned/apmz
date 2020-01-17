@@ -59,13 +59,13 @@ func NewInstanceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			m, err := sl.GetMetadater()
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v\n", err)
 				return err
 			}
 
 			instance, err := m.GetInstance(ctx)
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to fetch instance metadata: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to fetch instance metadata: %v\n", err)
 				return err
 			}
 
@@ -85,13 +85,13 @@ func NewAttestationCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			m, err := sl.GetMetadater()
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v\n", err)
 				return err
 			}
 
 			attest, err := m.GetAttestation(ctx, oArgs.Nonce)
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to fetch attest metadata: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to fetch attest metadata: %v\n", err)
 				return err
 			}
 
@@ -118,33 +118,33 @@ func NewTokenCommand(sl service.CommandServicer) (*cobra.Command, error) {
 
 			m, err := sl.GetMetadater()
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v\n", err)
 				return err
 			}
 
 			ri := azmeta.ResourceAndIdentity{
-				Resource:          oArgs.Resource,
+				Resource: oArgs.Resource,
 			}
 
 			if oArgs.MIResID != "" {
 				ri.ManagedIdentityID = &oArgs.MIResID
 				clientID, err := uuid.Parse(oArgs.ClientID)
 				if err != nil {
-					sl.GetPrinter().ErrPrintf("client ID could not be parsed into a uuid: %v", err)
+					sl.GetPrinter().ErrPrintf("client ID could not be parsed into a uuid: %v\n", err)
 					return err
 				}
 				ri.ClientID = &clientID
 
 				objectID, err := uuid.Parse(oArgs.ObjectID)
 				if err != nil {
-					sl.GetPrinter().ErrPrintf("object id could not be parsed into a uuid: %v", err)
+					sl.GetPrinter().ErrPrintf("object id could not be parsed into a uuid: %v\n", err)
 				}
 				ri.ObjectID = &objectID
 			}
 
 			token, err := m.GetIdentityToken(ctx, ri)
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to fetch identity token: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to fetch identity token: %v\n", err)
 				return err
 			}
 

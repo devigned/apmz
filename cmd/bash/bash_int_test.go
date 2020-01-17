@@ -154,10 +154,10 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 			},
 		},
 		{
-			name: "HasSessionIDSet",
+			name:   "HasSessionIDSet",
 			script: "echo $__SCRIPT_SESSION_ID",
 			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
-				stdout = strings.TrimSuffix(stdout,  "\n")
+				stdout = strings.TrimSuffix(stdout, "\n")
 				_, err := uuid.Parse(stdout)
 				assert.NoError(t, err, stdout)
 			},

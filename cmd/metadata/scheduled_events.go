@@ -48,13 +48,13 @@ func NewScheduledEventsCommand(sl service.CommandServicer) (*cobra.Command, erro
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			m, err := sl.GetMetadater()
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v\n", err)
 				return err
 			}
 
 			se, err := m.GetScheduledEvents(ctx)
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to fetch scheduled events metadata: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to fetch scheduled events metadata: %v\n", err)
 				return err
 			}
 
@@ -77,7 +77,7 @@ func NewScheduledEventsAckCommand(sl service.CommandServicer) (*cobra.Command, e
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			m, err := sl.GetMetadater()
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to build Metadater service: %v\n", err)
 				return err
 			}
 
@@ -86,9 +86,9 @@ func NewScheduledEventsAckCommand(sl service.CommandServicer) (*cobra.Command, e
 				ackEvents[i].EventID = id
 			}
 
-			ack := azmeta.AckEvents{StartRequests:ackEvents}
+			ack := azmeta.AckEvents{StartRequests: ackEvents}
 			if err := m.AckScheduledEvents(ctx, ack); err != nil {
-				sl.GetPrinter().ErrPrintf("unable to fetch scheduled events metadata: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to fetch scheduled events metadata: %v\n", err)
 				return err
 			}
 
