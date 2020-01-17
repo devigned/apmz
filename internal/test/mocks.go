@@ -83,7 +83,7 @@ func (mm *MetadataMock) GetAttestation(ctx context.Context, nonce string, middle
 	return args.Get(0).(*azmeta.Attestation), args.Error(1)
 }
 
-func (mm *MetadataMock) GetScheduledEvents(ctx context.Context, middleware ...azmeta.MiddlewareFunc) (*azmeta.ScheduledEvents, error){
+func (mm *MetadataMock) GetScheduledEvents(ctx context.Context, middleware ...azmeta.MiddlewareFunc) (*azmeta.ScheduledEvents, error) {
 	args := mm.Called(ctx, middleware)
 	return args.Get(0).(*azmeta.ScheduledEvents), args.Error(1)
 }

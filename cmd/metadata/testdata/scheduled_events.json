@@ -1,0 +1,15 @@
+{
+  "DocumentIncarnation": 8,
+  "Events": [
+    {
+      "EventId": "064BFF54-05E5-43EA-8500-AA0866E30352",
+      "EventStatus": "Scheduled",
+      "EventType": "Reboot",
+      "ResourceType": "VirtualMachine",
+      "Resources": [
+        "test1"
+      ],
+      "NotBefore": "Fri, 17 Jan 2020 17:14:47 GMT"
+    }
+  ]
+}

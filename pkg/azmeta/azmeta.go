@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/devigned/tab"
 	"github.com/google/uuid"
 )
@@ -147,12 +148,12 @@ type (
 
 	// ScheduledEvent describes an event which will happen in the future
 	ScheduledEvent struct {
-		ID           string      `json:"EventID,omitempty"`
-		Type         EventType   `json:"EventType,omitempty"`
-		ResourceType string      `json:"ResourceType,omitempty"`
-		Resources    []string    `json:"Resources,omitempty"`
-		Status       EventStatus `json:"EventStatus,omitempty"`
-		NotBefore    time.Time   `json:"NotBefore,omitempty"`
+		ID           string           `json:"EventID,omitempty"`
+		Type         EventType        `json:"EventType,omitempty"`
+		ResourceType string           `json:"ResourceType,omitempty"`
+		Resources    []string         `json:"Resources,omitempty"`
+		Status       EventStatus      `json:"EventStatus,omitempty"`
+		NotBefore    date.TimeRFC1123 `json:"NotBefore,omitempty"`
 	}
 
 	// IdentityToken is returned by the identity metadata service (basically an AAD JWT)
