@@ -39,7 +39,7 @@ func newDiffUnixNanoCommand(sl service.CommandServicer) (*cobra.Command, error) 
 			case "sec":
 				sl.GetPrinter().Printf("%f", math.Abs(elapsed.Seconds()))
 			default:
-				sl.GetPrinter().ErrPrintf("unknown time resolution %q", oArgs.Format)
+				sl.GetPrinter().ErrPrintf("unknown time resolution %q\n", oArgs.Format)
 			}
 			return nil
 		}),

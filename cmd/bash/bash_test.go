@@ -97,6 +97,6 @@ func TestNewBashCommand(t *testing.T) {
 
 func serviceWithKey() *mocks.ServiceMock {
 	s := new(mocks.ServiceMock)
-	s.On("GetKey").Return("foo")
+	s.On("GetKeys").Return([]string{"foo"})
 	return s
 }

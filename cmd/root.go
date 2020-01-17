@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/devigned/apmz-sdk/apmz"
 	"github.com/joho/godotenv"
@@ -22,6 +22,7 @@ import (
 	"github.com/devigned/apmz/pkg/azmeta"
 	"github.com/devigned/apmz/pkg/format"
 	"github.com/devigned/apmz/pkg/service"
+	"github.com/devigned/apmz/pkg/xcobra"
 )
 
 func init() {
@@ -49,11 +50,11 @@ func newRootCommand() (*cobra.Command, error) {
 		TraverseChildren: true,
 	}
 
-	var apiKey string
+	var apiKeys []string
 	var cfgFile string
 	var toOutput bool
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pub.yaml)")
-	rootCmd.PersistentFlags().StringVar(&apiKey, "api-key", "", "App Insights API key")
+	rootCmd.PersistentFlags().StringSliceVar(&apiKeys, "api-keys", nil, "comma separated keys for the Application Insights accounts to send to; eg 'key1,key2,key3'")
 	rootCmd.PersistentFlags().BoolVarP(&toOutput, "output", "o", false, "instead of sending directly to Application Insights, output event to stdout as json")
 
 	var once sync.Once
@@ -65,17 +66,23 @@ func newRootCommand() (*cobra.Command, error) {
 		APMerFactory: func() (service.APMer, error) {
 			var err error
 			once.Do(func() {
-				if apiKey == "" && !toOutput {
-					err = errors.New("must provide api-key")
+				if apiKeys == nil && !toOutput {
+					err = errors.New("must provide api-keys")
 					return
 				}
 
+				clients := make([]apmz.TelemetryClient, len(apiKeys))
+				for i, key := range apiKeys {
+					clients[i] = apmz.NewTelemetryClient(key)
+				}
+
 				clientProxy := service.APMZProxy{
-					TelemetryClient: apmz.NewTelemetryClient(apiKey),
+					Clients: clients,
 				}
 				if toOutput {
 					clientProxy.Printer = printer
 				}
+
 				apmer = clientProxy
 			})
 			return apmer, err
@@ -83,8 +90,8 @@ func newRootCommand() (*cobra.Command, error) {
 		PrinterFactory: func() format.Printer {
 			return printer
 		},
-		APIKeyFactory: func() string {
-			return apiKey
+		APIKeysFactory: func() []string {
+			return apiKeys
 		},
 		MetadataFactory: func() (service.Metadater, error) {
 			return azmeta.New()
@@ -112,19 +119,14 @@ func newRootCommand() (*cobra.Command, error) {
 		rootCmd.AddCommand(cmd)
 	}
 
-	rootCmd.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
+	rootCmd.PersistentPostRunE = xcobra.PostRunWithCtxE(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 		if apmer == nil {
 			return nil
 		}
 
-		select {
-		case <-time.After(10 * time.Second):
-			return errors.New("failed to flush events to Application Insights")
-		case <-apmer.Channel().Close(2 * time.Second):
-		}
-
+		apmer.Close(ctx)
 		return nil
-	}
+	})
 
 	return rootCmd, nil
 }

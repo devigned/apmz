@@ -39,10 +39,8 @@ func NewBashCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				}
 			} else {
 				// enabled, so we need to have the AppInsightsKey set
-				if sl.GetKey() == "" {
-					warning := `Warning: apmz event collection is enabled, but --api-key is not specified. You must override
-the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights on script exit.
-`
+				if sl.GetKeys() == nil || len(sl.GetKeys()) == 0 {
+					warning := "Warning: apmz event collection is enabled, but --api-keys is not specified. You must override the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights on script exit.\n"
 					sl.GetPrinter().ErrPrintf(warning)
 				}
 			}
@@ -54,13 +52,16 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 
 			tags := strings.Join(kvs, ",")
 			input := struct {
-				ScriptName     string
-				DefaultTags    string
-				AppInsightsKey string
+				ScriptName      string
+				DefaultTags     string
+				AppInsightsKeys string
 			}{
-				ScriptName:     oArgs.ScriptName,
-				DefaultTags:    tags,
-				AppInsightsKey: sl.GetKey(),
+				ScriptName:  oArgs.ScriptName,
+				DefaultTags: tags,
+			}
+
+			if sl.GetKeys() != nil {
+				input.AppInsightsKeys = strings.Join(sl.GetKeys(), ",")
 			}
 
 			tmpl, err := template.New("script").Parse(string(script))

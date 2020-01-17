@@ -68,3 +68,25 @@ func RunWithCtx(run func(ctx context.Context, cmd *cobra.Command, args []string)
 		err = run(ctx, cmd, args)
 	}
 }
+
+// PostRunWithCtxE will run a command which will respect os signals and propagate the context to children
+func PostRunWithCtxE(run func(ctx context.Context, cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Wait for a signal to quit:
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, os.Kill)
+
+	go func() {
+		<-signalChan
+		cancel()
+	}()
+
+	return func(cmd *cobra.Command, args []string) error {
+		ctx, span := tab.StartSpan(ctx, cmd.Name()+".Run")
+		defer span.End()
+		defer cancel()
+
+		return run(ctx, cmd, args)
+	}
+}

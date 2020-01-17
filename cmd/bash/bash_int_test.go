@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"text/template"
@@ -41,9 +42,7 @@ func TestNewBashCommandEnabled(t *testing.T) {
 			name: "RunWithDefaultSettings",
 			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
 				_, err := os.Stat(eventFilePath)
-				warning := `Warning: apmz event collection is enabled, but --api-key is not specified. You must override
-the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights on script exit.
-`
+				warning := "Warning: apmz event collection is enabled, but --api-keys is not specified. You must override the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights on script exit.\n"
 				assert.Equal(t, warning, stderr)
 				assert.Equal(t, "", stdout)
 				assert.Error(t, err, "should not find file because the script should have cleaned it up")
@@ -101,15 +100,17 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 			},
 		},
 		{
-			name: "WithKeyAsArgs",
-			env:  []string{"__PRESERVE_TMP_FILE=true"},
-			args: []string{"--api-key", "foo"},
+			name:   "WithKeyAsArgs",
+			env:    []string{"__PRESERVE_TMP_FILE=true"},
+			args:   []string{"--api-keys", "foo,something"},
+			script: "echo $__APP_INSIGHTS_KEYS",
 			assertions: func(t *testing.T, stdout, stderr, eventFilePath string) {
 				_, err := os.Stat(eventFilePath)
 				require.NoError(t, err)
 				lines := readEventFile(t, eventFilePath)
 				assert.Equal(t, 2, len(lines))
-				assert.Empty(t, stderr)
+				assert.Equal(t, "sent 2 events\n", stderr)
+				assert.Equal(t, "foo,something\n", stdout)
 			},
 		},
 		{
@@ -167,14 +168,15 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
 			scriptFileName, eventFileName, del := generateTmpFiles(t)
 			defer del()
 
+			abPath, err := filepath.Abs("../../bin")
+			require.NoError(t, err)
 			writeTestScript(t, scriptFileName, testScriptInput{
 				Args:   strings.Join(c.args, " "),
 				Script: c.script,
-				BinDir: "../../bin",
+				BinDir: abPath,
 			})
 
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -184,10 +186,10 @@ the __APP_INSIGHTS_KEY env var or events will not be set to Application Insights
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
 			cmd.Env = append(c.env, fmt.Sprintf("__TMP_APMZ_BATCH_FILE=%s", eventFileName))
-			err := cmd.Run()
+			err = cmd.Run()
 			outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 			if err != nil {
-				require.NoError(t, err, errStr)
+				require.NoError(t, err, outStr, errStr)
 			}
 			c.assertions(t, outStr, errStr, eventFileName)
 		})
@@ -222,14 +224,15 @@ time_metric "some_metric" echo "me"
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
 			scriptFileName, eventFileName, del := generateTmpFiles(t)
 			defer del()
 
+			abPath, err := filepath.Abs("../../bin")
+			require.NoError(t, err)
 			writeTestScript(t, scriptFileName, testScriptInput{
 				Args:   strings.Join(c.args, " "),
 				Script: c.script,
-				BinDir: "../../bin",
+				BinDir: abPath,
 			})
 
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -239,7 +242,7 @@ time_metric "some_metric" echo "me"
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
 			cmd.Env = append(c.env, fmt.Sprintf("__TMP_APMZ_BATCH_FILE=%s", eventFileName))
-			err := cmd.Run()
+			err = cmd.Run()
 			outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 			if err != nil {
 				require.NoError(t, err, errStr)

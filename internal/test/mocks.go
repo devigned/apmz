@@ -41,9 +41,9 @@ func (sm *ServiceMock) GetPrinter() format.Printer {
 	return args.Get(0).(format.Printer)
 }
 
-func (sm *ServiceMock) GetKey() string {
+func (sm *ServiceMock) GetKeys() []string {
 	args := sm.Called()
-	return args.String(0)
+	return args.Get(0).([]string)
 }
 
 func (sm *ServiceMock) GetMetadater() (service.Metadater, error) {

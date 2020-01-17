@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -31,7 +30,7 @@ func NewBatchCommand(sl service.CommandServicer) (*cobra.Command, error) {
 		Run: xcobra.RunWithCtx(func(ctx context.Context, cmd *cobra.Command, args []string) error {
 			apmzer, err := sl.GetAPMer()
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to create App Insight client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create App Insight client: %v\n", err)
 				return err
 			}
 
@@ -39,7 +38,7 @@ func NewBatchCommand(sl service.CommandServicer) (*cobra.Command, error) {
 			if oArgs.FilePath != "" {
 				bits, err := ioutil.ReadFile(oArgs.FilePath)
 				if err != nil {
-					sl.GetPrinter().ErrPrintf("unable to read file: %v", err)
+					sl.GetPrinter().ErrPrintf("unable to read file: %v\n", err)
 					return err
 				}
 				reader = bytes.NewReader(bits)
@@ -47,7 +46,7 @@ func NewBatchCommand(sl service.CommandServicer) (*cobra.Command, error) {
 
 			eventsBits, err := ioutil.ReadAll(reader)
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to read: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to read: %v\n", err)
 				return err
 			}
 
@@ -69,7 +68,8 @@ func NewBatchCommand(sl service.CommandServicer) (*cobra.Command, error) {
 				sent++
 			}
 
-			return sl.GetPrinter().Print(struct{ Result string }{Result: fmt.Sprintf("sent %d events", sent)})
+			sl.GetPrinter().ErrPrintf("sent %d events\n", sent)
+			return nil
 		}),
 	}
 
