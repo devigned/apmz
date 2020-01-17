@@ -34,7 +34,7 @@ func NewTraceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 
 			apmer, err := sl.GetAPMer()
 			if err != nil {
-				sl.GetPrinter().ErrPrintf("unable to create App Insight client: %v", err)
+				sl.GetPrinter().ErrPrintf("unable to create App Insight client: %v\n", err)
 				return err
 			}
 

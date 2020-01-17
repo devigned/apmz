@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sync"
+	"time"
 
 	"github.com/devigned/apmz-sdk/apmz"
 
@@ -17,7 +19,7 @@ type (
 	Registry struct {
 		APMerFactory    func() (APMer, error)
 		PrinterFactory  func() format.Printer
-		APIKeyFactory   func() string
+		APIKeysFactory  func() []string
 		MetadataFactory func() (Metadater, error)
 	}
 
@@ -26,7 +28,7 @@ type (
 		GetMetadater() (Metadater, error)
 		GetAPMer() (APMer, error)
 		GetPrinter() format.Printer
-		GetKey() string
+		GetKeys() []string
 	}
 
 	// Metadater abstracts the underlying implementation of the instance metadata service
@@ -41,13 +43,13 @@ type (
 	// APMer provides the behaviors needed to send events to Azure Application Insights
 	APMer interface {
 		Track(telemetry apmz.Telemetry)
-		Channel() apmz.TelemetryChannel
+		Close(ctx context.Context)
 	}
 
 	// APMZProxy will proxy calls to the APMZ client or print if running locally
 	APMZProxy struct {
 		Printer format.Printer
-		apmz.TelemetryClient
+		Clients []apmz.TelemetryClient
 	}
 
 	// EventType represents the enumeration of all the event types the Batch command understands
@@ -82,9 +84,9 @@ func (r *Registry) GetPrinter() format.Printer {
 	return r.PrinterFactory()
 }
 
-// GetKey will return the api-key for application insights
-func (r *Registry) GetKey() string {
-	return r.APIKeyFactory()
+// GetKeys will return the api keys for application insights
+func (r *Registry) GetKeys() []string {
+	return r.APIKeysFactory()
 }
 
 // Track will either send to the client or print depending if the proxy printer is set
@@ -103,7 +105,37 @@ func (apmzp APMZProxy) Track(item apmz.Telemetry) {
 		return
 	}
 
-	apmzp.TelemetryClient.Track(item)
+	for _, client := range apmzp.Clients {
+		client.Track(item)
+	}
+}
+
+// Close will flush and close the underlying App Insights clients
+func (apmzp APMZProxy) Close(ctx context.Context) {
+	done := make(chan struct{})
+	wg := sync.WaitGroup{}
+	wg.Add(len(apmzp.Clients))
+	for _, client := range apmzp.Clients {
+		c := client
+		go func() {
+			c.Channel().Close(30 * time.Second)
+			wg.Done()
+		}()
+	}
+
+	// wait for all to complete
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	// wait for done or context cancel
+	select {
+	case <-done:
+	case <-ctx.Done():
+	}
+
+	return
 }
 
 // UnmarshalJSON takes json bytes and turns them into an event

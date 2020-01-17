@@ -104,7 +104,7 @@ __TMP_APMZ_BATCH_FILE="${__TMP_APMZ_BATCH_FILE:-$(mktemp /tmp/apmz.XXXXXX)}"
 __SCRIPT_SESSION_ID="${__SCRIPT_SESSION_ID:-$(apmz uuid)}"
 __SCRIPT_START_TIME=$(apmz time unixnano)
 __SCRIPT_NAME="${__SCRIPT_NAME:-{{.ScriptName}}}"
-__APP_INSIGHTS_KEY="${__APP_INSIGHTS_KEY:-{{.AppInsightsKey}}}"
+__APP_INSIGHTS_KEYS="${__APP_INSIGHTS_KEYS:-{{.AppInsightsKeys}}}"
 __DEFAULT_TAGS="${__DEFAULT_TAGS:-{{.DefaultTags}}}"
 __DEFAULT_TIME="${__DEFAULT_TIME:-sec}"
 
@@ -213,8 +213,8 @@ exitAndFlush() {
     apmz metric -n "$__SCRIPT_NAME-duration" -v "${duration}" -t "${__DEFAULT_TAGS}" -o >>"${__TMP_APMZ_BATCH_FILE}"
   fi
 
-  if [[ -n "${__APP_INSIGHTS_KEY}" && -z "${__DRY_RUN}" ]]; then
-    apmz batch -f "${__TMP_APMZ_BATCH_FILE}" --api-key "${__APP_INSIGHTS_KEY}"
+  if [[ -n "${__APP_INSIGHTS_KEYS}" && -z "${__DRY_RUN}" ]]; then
+    apmz batch -f "${__TMP_APMZ_BATCH_FILE}" --api-keys "${__APP_INSIGHTS_KEYS}"
   fi
 
   if [[ -z "${__PRESERVE_TMP_FILE}" ]]; then
@@ -236,7 +236,7 @@ func dataEnabled_bashGosh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/enabled_bash.gosh", size: 4191, mode: os.FileMode(420), modTime: time.Unix(1578961032, 0)}
+	info := bindataFileInfo{name: "data/enabled_bash.gosh", size: 4197, mode: os.FileMode(420), modTime: time.Unix(1579297730, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
