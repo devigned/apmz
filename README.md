@@ -86,6 +86,7 @@ If you are interested in seeing more of what the script does just run `apmz bash
 Well, you can do all of the things that `apmz bash` does, but you have to write your own functions.
 
 ```
+$ apmz
 apmz provides a command line interface for the Azure Application Insights
 
 Usage:
@@ -95,6 +96,7 @@ Available Commands:
   bash        prints a bash script to source which provides functionality for common tracing and metrics operations
   batch       upload a batch of telemetry to Application Insights
   help        Help about any command
+  metadata    Azure instance metadata service related commands
   metric      send a metric (customMetrics) to Application Insights
   time        time related commands
   trace       send a trace event (traces) to Application Insights
@@ -108,6 +110,88 @@ Flags:
   -o, --output           instead of sending directly to Application Insights, output event to stdout as json
 
 Use "apmz [command] --help" for more information about a command.
+```
+
+#### Access the instance metadata endpoint on the VM
+```bash
+$ apmz metadata instance | jq
+{
+  "compute": {
+    "azEnvironment": "AzurePublicCloud",
+    "location": "westus2",
+    "name": "test1",
+    "offer": "UbuntuServer",
+    "osType": "Linux",
+    "plan": {},
+    "platformFaultDomain": "0",
+    "platformUpdateDomain": "0",
+    "provider": "Microsoft.Compute",
+    "publicKeys": [
+      {
+        "keyData": "key",
+        "path": "/home/azureuser/.ssh/authorized_keys"
+      }
+    ],
+    "publisher": "Canonical",
+    "resourceGroupName": "test",
+    "resourceId": "/subscriptions/something/resourceGroups/test/providers/Microsoft.Compute/virtualMachines/test1",
+    "sku": "18.04-LTS",
+    "subscriptionId": "foo",
+    "version": "18.04.201912180",
+    "vmId": "114433da-3f44-4bc1-9fa3-a714516c2abd",
+    "vmSize": "Standard_DS1_v2"
+  },
+  "network": {
+    "interface": [
+      {
+        "ipv4": {
+          "ipAddress": [
+            {
+              "privateIpAddress": "10.0.0.4",
+              "publicIpAddress": "52.228.7.11"
+            }
+          ],
+          "subnet": [
+            {
+              "address": "10.0.0.0",
+              "prefix": "24"
+            }
+          ]
+        },
+        "ipv6": {},
+        "macAddress": "000D3AC2FB9A"
+      }
+    ]
+  }
+}
+```
+
+#### Get an auth token for the local VM identity
+```bash
+$ token=$(apmz metadata token -r "https://management.azure.com/" | jq -r ".access_token")
+$ curl -H "Authorization: Bearer $token" https://management.azure.com/subscriptions?api-version=2019-11-01 | jq
+{
+  "value": [
+    {
+      "id": "/subscriptions/sub-id",
+      "authorizationSource": "RoleBased",
+      "managedByTenants": [],
+      "subscriptionId": "sub-id",
+      "tenantId": "tenant-id",
+      "displayName": "SubscriptionName",
+      "state": "Enabled",
+      "subscriptionPolicies": {
+        "locationPlacementId": "Public_2014-09-01",
+        "quotaId": "MSDN_2014-09-01",
+        "spendingLimit": "On"
+      }
+    }
+  ],
+  "count": {
+    "type": "Total",
+    "value": 1
+  }
+}
 ```
 
 ## Developing
