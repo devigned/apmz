@@ -1,6 +1,8 @@
 package metadata
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"testing"
 
 	"github.com/google/uuid"
@@ -192,6 +194,57 @@ func TestNewTokenCommand(t *testing.T) {
 			t.Parallel()
 			s := c.setup(t)
 			cmd, err := NewTokenCommand(s)
+			assert.NoError(t, err)
+			assert.NotNil(t, cmd)
+			c.assertions(t, cmd)
+		})
+	}
+}
+
+func TestNewInstanceCommand(t *testing.T) {
+	cases := []struct {
+		name       string
+		setup      func(t *testing.T) *mocks.ServiceMock
+		assertions func(t *testing.T, cmd *cobra.Command)
+	}{
+		{
+			name: "CommandConstruction",
+			setup: func(t *testing.T) *mocks.ServiceMock {
+				return nil
+			},
+			assertions: func(t *testing.T, cmd *cobra.Command) {
+				assert.Equal(t, "instance", cmd.Name())
+			},
+		},
+		{
+			name: "WithSystemAssignedIdentity",
+			setup: func(t *testing.T) *mocks.ServiceMock {
+				sl := new(mocks.ServiceMock)
+				p := new(mocks.PrinterMock)
+				m := new(mocks.MetadataMock)
+
+				var instance azmeta.Instance
+				js, err := ioutil.ReadFile("./testdata/instance.json")
+				require.NoError(t, err)
+				require.NoError(t, json.Unmarshal(js, &instance))
+				p.On("Print", &instance).Return(nil)
+				m.On("GetInstance", mock.Anything, mock.Anything).Return(&instance, nil)
+				sl.On("GetPrinter").Return(p)
+				sl.On("GetMetadater").Return(m, nil)
+				return sl
+			},
+			assertions: func(t *testing.T, cmd *cobra.Command) {
+				assert.NoError(t, cmd.Execute())
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			s := c.setup(t)
+			cmd, err := NewInstanceCommand(s)
 			assert.NoError(t, err)
 			assert.NotNil(t, cmd)
 			c.assertions(t, cmd)
