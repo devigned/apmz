@@ -25,8 +25,8 @@ func NewEventsCommandGroup(sl service.CommandServicer) (*cobra.Command, error) {
 	}
 
 	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
-		newScheduledEventsCommand,
-		newScheduledEventsAckCommand,
+		NewScheduledEventsCommand,
+		NewScheduledEventsAckCommand,
 	}
 
 	for _, f := range cmdFuncs {
@@ -40,8 +40,8 @@ func NewEventsCommandGroup(sl service.CommandServicer) (*cobra.Command, error) {
 	return rootCmd, nil
 }
 
-// newScheduledEventsCommand creates a new `apmz metadata events get` command
-func newScheduledEventsCommand(sl service.CommandServicer) (*cobra.Command, error) {
+// NewScheduledEventsCommand creates a new `apmz metadata events get` command
+func NewScheduledEventsCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "get",
 		Short: "fetches the scheduled events for the machine",
@@ -65,8 +65,8 @@ func newScheduledEventsCommand(sl service.CommandServicer) (*cobra.Command, erro
 	return cmd, nil
 }
 
-// newScheduledEventsAckCommand creates a new `apmz metadata events ack` command
-func newScheduledEventsAckCommand(sl service.CommandServicer) (*cobra.Command, error) {
+// NewScheduledEventsAckCommand creates a new `apmz metadata events ack` command
+func NewScheduledEventsAckCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs ackArgs
 	cmd := &cobra.Command{
 		Use:   "ack",

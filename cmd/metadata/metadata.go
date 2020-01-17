@@ -34,10 +34,10 @@ func NewMetadataCommandGroup(sl service.CommandServicer) (*cobra.Command, error)
 	}
 
 	cmdFuncs := []func(locator service.CommandServicer) (*cobra.Command, error){
-		newInstanceCommand,
-		newAttestationCommand,
+		NewInstanceCommand,
+		NewAttestationCommand,
 		NewEventsCommandGroup,
-		newTokenCommand,
+		NewTokenCommand,
 	}
 
 	for _, f := range cmdFuncs {
@@ -51,8 +51,8 @@ func NewMetadataCommandGroup(sl service.CommandServicer) (*cobra.Command, error)
 	return rootCmd, nil
 }
 
-// newInstanceCommand creates a new `apmz metadata instance` command
-func newInstanceCommand(sl service.CommandServicer) (*cobra.Command, error) {
+// NewInstanceCommand creates a new `apmz metadata instance` command
+func NewInstanceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "instance",
 		Short: "fetches the instance information via the instance metadata service",
@@ -76,8 +76,8 @@ func newInstanceCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	return cmd, nil
 }
 
-// newAttestationCommand creates a new `apmz metadata attest` command
-func newAttestationCommand(sl service.CommandServicer) (*cobra.Command, error) {
+// NewAttestationCommand creates a new `apmz metadata attest` command
+func NewAttestationCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs attestArgs
 	cmd := &cobra.Command{
 		Use:   "attest",
@@ -103,8 +103,8 @@ func newAttestationCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	return cmd, nil
 }
 
-// newTokenCommand creates a new `apmz metadata token` command
-func newTokenCommand(sl service.CommandServicer) (*cobra.Command, error) {
+// NewTokenCommand creates a new `apmz metadata token` command
+func NewTokenCommand(sl service.CommandServicer) (*cobra.Command, error) {
 	var oArgs tokenArgs
 	cmd := &cobra.Command{
 		Use:   "token",
