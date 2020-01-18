@@ -105,7 +105,6 @@ Available Commands:
 
 Flags:
       --api-keys strings   comma separated keys for the Application Insights accounts to send to; eg 'key1,key2,key3'
-      --config string    config file (default is $HOME/.pub.yaml)
   -h, --help             help for apmz
   -o, --output           instead of sending directly to Application Insights, output event to stdout as json
 
