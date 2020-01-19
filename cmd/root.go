@@ -51,9 +51,7 @@ func newRootCommand() (*cobra.Command, error) {
 	}
 
 	var apiKeys []string
-	var cfgFile string
 	var toOutput bool
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pub.yaml)")
 	rootCmd.PersistentFlags().StringSliceVar(&apiKeys, "api-keys", nil, "comma separated keys for the Application Insights accounts to send to; eg 'key1,key2,key3'")
 	rootCmd.PersistentFlags().BoolVarP(&toOutput, "output", "o", false, "instead of sending directly to Application Insights, output event to stdout as json")
 

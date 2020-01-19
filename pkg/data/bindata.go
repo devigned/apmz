@@ -236,7 +236,7 @@ func dataEnabled_bashGosh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/enabled_bash.gosh", size: 4197, mode: os.FileMode(420), modTime: time.Unix(1579297730, 0)}
+	info := bindataFileInfo{name: "data/enabled_bash.gosh", size: 4197, mode: os.FileMode(420), modTime: time.Unix(1579309455, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
